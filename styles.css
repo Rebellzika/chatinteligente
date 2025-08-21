@@ -1,0 +1,1984 @@
+/* Importação das diretivas base do Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globais básicos */
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #c7d2fe 100%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Estilos customizados para melhorar a experiência do usuário */
+.transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para scrollbars personalizados */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+}
+
+/* Scrollbars específicos para contas fixas */
+#fixed-bills-list::-webkit-scrollbar,
+#modal-fixed-bills-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#fixed-bills-list::-webkit-scrollbar-track,
+#modal-fixed-bills-list::-webkit-scrollbar-track {
+    background: rgba(243, 232, 255, 0.3);
+    border-radius: 3px;
+}
+
+#fixed-bills-list::-webkit-scrollbar-thumb,
+#modal-fixed-bills-list::-webkit-scrollbar-thumb {
+    background: rgba(196, 181, 253, 0.6);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+#fixed-bills-list::-webkit-scrollbar-thumb:hover,
+#modal-fixed-bills-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(196, 181, 253, 0.8);
+}
+
+/* Scrollbar para Firefox */
+#fixed-bills-list,
+#modal-fixed-bills-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(196, 181, 253, 0.6) rgba(243, 232, 255, 0.3);
+}
+
+/* Estilos para indicadores de rolagem */
+#fixed-bills-scroll-indicator,
+#fixed-bills-scroll-indicator-tab,
+#modal-fixed-bills-scroll-indicator {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Animação para indicadores de rolagem */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para contadores de contas fixas */
+#fixed-bills-count,
+#fixed-bills-count-tab {
+    transition: all 0.3s ease;
+}
+
+#fixed-bills-count:hover,
+#fixed-bills-count-tab:hover {
+    transform: scale(1.1);
+    background-color: rgba(196, 181, 253, 0.2);
+}
+
+/* Estilos para botões de opções do chat com efeito de luzes andando */
+.shine-effect {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6) border-box;
+    background-size: 200% 200%;
+    animation: borderLight 3s linear infinite, autoShine 3s ease-in-out infinite;
+}
+
+.shine-effect::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(59, 130, 246, 0.8) 25%, 
+        rgba(139, 92, 246, 0.8) 50%, 
+        rgba(236, 72, 153, 0.8) 75%, 
+        transparent 100%);
+    background-size: 200% 200%;
+    animation: movingLights 2s linear infinite;
+    z-index: -1;
+    border-radius: inherit;
+}
+
+.shine-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.6),
+        transparent
+    );
+    transition: left 0.6s ease;
+}
+
+.shine-effect:hover::after {
+    left: 100%;
+}
+
+/* Animação das luzes se movendo na borda */
+@keyframes movingLights {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Animação do gradiente da borda */
+@keyframes borderLight {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Efeito de brilho automático a cada 3 segundos */
+@keyframes autoShine {
+    0%, 85% {
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    90% {
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+    }
+    95% {
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+    }
+    100% {
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+}
+
+/* Hover com efeito de brilho mais intenso */
+.shine-effect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    animation: borderLight 1.5s linear infinite, autoShine 1.5s ease-in-out infinite;
+}
+
+.shine-effect:hover::before {
+    animation: movingLights 1s linear infinite;
+}
+
+.shine-effect:hover::after {
+    animation: none;
+    left: 100%;
+}
+
+/* Animações personalizadas */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pulse-hover:hover {
+    animation: pulse 0.6s ease-in-out;
+}
+
+/* Estilos para o chat */
+#chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) rgba(241, 245, 249, 0.5);
+    height: calc(100vh - 600px);
+    overflow-y: auto;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 4px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 4px;
+    transition: background 0.2s ease-in-out;
+}
+
+#chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
+}
+
+/* Estilos para mensagens do chat */
+.chat-message {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.chat-message.user {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.chat-message.assistant {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+/* Estilos para o sidebar mobile */
+#sidebar {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+#sidebar-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 1024px) {
+    #sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 999;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    
+    #sidebar.active {
+        left: 0;
+    }
+    
+    #sidebar-overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    #main-content {
+        padding: 1rem;
+    }
+    
+    .chat-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .chat-header p {
+        font-size: 0.875rem;
+    }
+}
+
+/* Otimizações para telas grandes (PC) */
+@media (min-width: 1280px) {
+    #sidebar {
+        padding: 2rem;
+    }
+    
+    #sidebar h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    #sidebar .space-y-3 > div {
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+    
+    #sidebar .space-y-3 > div p:first-child {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    #sidebar .space-y-3 > div p:last-child {
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    #sidebar {
+        padding: 2.5rem;
+    }
+    
+    #sidebar h2 {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    #sidebar .space-y-3 > div {
+        padding: 2rem;
+        border-radius: 1.25rem;
+    }
+    
+    #sidebar .space-y-3 > div p:first-child {
+        font-size: 1.125rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    #sidebar .space-y-3 > div p:last-child {
+        font-size: 1.75rem;
+    }
+}
+
+/* Estilos para estados de loading */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 3px solid rgba(0, 122, 255, 0.1);
+    border-top: 3px solid var(--accent-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilos para botões com gradientes */
+.btn-gradient {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(135deg, #0056cc 0%, #8b5cf6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+}
+
+/* Estilos para cards com glassmorphism */
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para inputs com foco */
+.input-focus:focus {
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+}
+
+/* Estilos para transições suaves */
+.smooth-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para hover effects */
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para o modal de ajuda - agora usando classes comuns */
+
+/* Estilos para mensagens de erro */
+.error-message {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Estilos para mensagens de sucesso */
+.success-message {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+    animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+    40%, 43% { transform: translateY(-8px); }
+    70% { transform: translateY(-4px); }
+    90% { transform: translateY(-2px); }
+}
+
+
+
+/* ===== TEMA ESCURO ELEGANTE ÚNICO ===== */
+
+/* Tema escuro elegante - Inspirado nos temas da Apple */
+body {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2a2a2a;
+    --bg-tertiary: #3a3a3a;
+    --text-primary: #ffffff;
+    --text-secondary: #e5e5e7;
+    --text-muted: #86868b;
+    --border-color: rgba(255, 255, 255, 0.12);
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.16);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --hover-bg: rgba(255, 255, 255, 0.16);
+    --accent-blue: #007aff;
+    --accent-purple: #af52de;
+    --accent-green: #30d158;
+    --accent-orange: #ff9f0a;
+    --accent-red: #ff3b30;
+}
+
+/* Aplicar variáveis CSS automaticamente - TEMA ESCURO FIXO */
+body {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+    color: var(--text-primary) !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== ESTILOS DO TEMA ESCURO ELEGANTE ===== */
+
+/* Header e navegação */
+header {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+/* Sidebar */
+#sidebar {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+.tab-btn {
+    background: var(--card-bg) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-btn:hover {
+    background: var(--hover-bg) !important;
+    color: var(--text-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+.tab-btn.active {
+    background: var(--accent-blue) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3) !important;
+}
+
+/* Cards e painéis */
+.bg-white\/80,
+.bg-white\/90,
+.bg-white\/95 {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+.bg-gray-50,
+.bg-gray-100 {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+}
+
+/* Textos - SOBRESCRITA FORÇADA para tema escuro */
+.text-gray-800,
+.text-gray-900 {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-700 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+/* Bordas */
+.border-white\/20,
+.border-gray-200,
+.border-gray-300 {
+    border-color: var(--glass-border) !important;
+}
+
+/* Inputs e selects */
+input,
+select,
+textarea {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-primary) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+    background: var(--hover-bg) !important;
+}
+
+input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Estilos específicos para dropdowns e suas opções */
+select {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Estilização das opções do dropdown para tema escuro */
+select option {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    padding: 8px 12px !important;
+}
+
+/* Hover nas opções do dropdown */
+select option:hover {
+    background: var(--hover-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Opção selecionada */
+select option:checked {
+    background: var(--accent-blue) !important;
+    color: white !important;
+}
+
+/* Estilo para o dropdown quando aberto (Chrome/Safari) */
+select:focus option {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Estilo para o dropdown quando aberto (Firefox) */
+select:-moz-focusring {
+    color: transparent !important;
+    text-shadow: 0 0 0 var(--text-primary) !important;
+}
+
+/* Estilo para o dropdown quando aberto (Edge) */
+select::-ms-expand {
+    display: none;
+}
+
+/* Botões */
+.bg-blue-600 {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+}
+
+.bg-blue-600:hover {
+    background: linear-gradient(135deg, #0056cc, #8b5cf6) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4) !important;
+}
+
+.bg-gray-200 {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+.bg-gray-200:hover {
+    background: var(--hover-bg) !important;
+}
+
+/* Chat - SOBRESCRITA ESPECÍFICA para mensagens */
+#chat-messages {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+}
+
+/* SOBRESCRITA FORÇADA para mensagens do usuário */
+.user-message {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3) !important;
+}
+
+/* SOBRESCRITA FORÇADA para mensagens do assistente */
+.assistant-message {
+    background: var(--glass-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+/* SOBRESCRITA ESPECÍFICA para a mensagem inicial do bot no HTML */
+#chat-messages .bg-gray-100 {
+    background: var(--glass-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+#chat-messages .text-gray-800 {
+    color: var(--text-primary) !important;
+}
+
+#chat-messages .text-gray-600 {
+    color: var(--text-secondary) !important;
+}
+
+/* SOBRESCRITA para todos os elementos de texto no chat */
+#chat-messages * {
+    color: inherit !important;
+}
+
+/* SOBRESCRITA FORÇADA para todos os backgrounds cinzas */
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200,
+.bg-gray-300 {
+    background: var(--card-bg) !important;
+}
+
+/* SOBRESCRITA FORÇADA para todos os backgrounds brancos */
+.bg-white,
+.bg-white\/80,
+.bg-white\/90,
+.bg-white\/95 {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA FORÇADA para todos os textos cinzas */
+.text-gray-800,
+.text-gray-900,
+.text-gray-700,
+.text-gray-600,
+.text-gray-500,
+.text-gray-400 {
+    color: var(--text-primary) !important;
+}
+
+/* SOBRESCRITA para textos secundários específicos */
+.text-gray-600 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+/* SOBRESCRITA para bordas */
+.border-gray-100,
+.border-gray-200,
+.border-gray-300,
+.border-white\/20 {
+    border-color: var(--glass-border) !important;
+}
+
+/* SOBRESCRITA para o fundo principal da aplicação */
+.bg-gradient-to-br.from-slate-50.via-blue-50.to-indigo-100 {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+}
+
+/* SOBRESCRITA para o fundo da tela principal */
+#app-screen.bg-gradient-to-br.from-slate-50.via-blue-50.to-indigo-100 {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+}
+
+/* SOBRESCRITA para o fundo da tela de login */
+#login-screen.bg-gradient-to-br.from-blue-600.via-indigo-700.to-purple-800 {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+}
+
+/* Estilo de vidro transparente para o modal de ajuda - 30% menos transparente */
+#help-modal {
+    background: rgba(0, 0, 0, 0.35) !important; /* 30% menos transparente que o padrão (0.5) */
+}
+
+#help-modal .modal-content {
+    background: rgba(255, 255, 255, 0.85) !important; /* 30% menos transparente que o padrão */
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Aplicar efeito de vidro ao conteúdo interno do modal de ajuda */
+#help-modal .bg-white {
+    background: rgba(255, 255, 255, 0.7) !important; /* Transparente como vidro */
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Header do modal de ajuda com efeito de vidro */
+#help-modal .bg-gradient-to-r {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(79, 70, 229, 0.8)) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+
+
+/* Estilo de vidro transparente para os cards dentro do modal de ajuda */
+#help-modal .bg-blue-50,
+#help-modal .bg-green-50,
+#help-modal .bg-red-50,
+#help-modal .bg-purple-50,
+#help-modal .bg-indigo-50,
+#help-modal .bg-orange-50,
+#help-modal .bg-teal-50,
+#help-modal .bg-yellow-50,
+#help-modal .bg-gray-50,
+#help-modal .bg-pink-50,
+#help-modal .bg-cyan-50 {
+    background: var(--card-bg) !important; /* Fundo escuro para melhor legibilidade */
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+/* Bordas específicas para cada tipo de card para melhor diferenciação */
+#help-modal .border-blue-200 {
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+#help-modal .border-green-200 {
+    border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+#help-modal .border-red-200 {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+#help-modal .border-purple-200 {
+    border-color: rgba(147, 51, 234, 0.3) !important;
+}
+
+#help-modal .border-indigo-200 {
+    border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+#help-modal .border-orange-200 {
+    border-color: rgba(249, 115, 22, 0.3) !important;
+}
+
+#help-modal .border-teal-200 {
+    border-color: rgba(20, 184, 166, 0.3) !important;
+}
+
+#help-modal .border-yellow-200 {
+    border-color: rgba(234, 179, 8, 0.3) !important;
+}
+
+#help-modal .border-gray-200 {
+    border-color: rgba(156, 163, 175, 0.3) !important;
+}
+
+#help-modal .border-pink-200 {
+    border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+#help-modal .border-cyan-200 {
+    border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+/* Estilos de texto para o modal de ajuda - usando variáveis CSS */
+#help-modal .text-gray-800,
+#help-modal .text-gray-600,
+#help-modal .text-gray-700 {
+    color: var(--text-primary) !important;
+}
+
+#help-modal .text-blue-800,
+#help-modal .text-green-800,
+#help-modal .text-red-800,
+#help-modal .text-purple-800,
+#help-modal .text-indigo-800,
+#help-modal .text-orange-800,
+#help-modal .text-teal-800,
+#help-modal .text-yellow-800,
+#help-modal .text-pink-800,
+#help-modal .text-cyan-800 {
+    color: var(--text-primary) !important; /* Texto principal para melhor legibilidade */
+}
+
+/* Cores específicas para os textos dos cards de ajuda */
+#help-modal .text-blue-700,
+#help-modal .text-green-700,
+#help-modal .text-red-700,
+#help-modal .text-purple-700,
+#help-modal .text-indigo-700,
+#help-modal .text-orange-700,
+#help-modal .text-teal-700,
+#help-modal .text-yellow-700,
+#help-modal .text-gray-700,
+#help-modal .text-pink-700,
+#help-modal .text-cyan-700 {
+    color: var(--text-secondary) !important; /* Texto secundário para os itens das listas */
+}
+
+/* SOBRESCRITA para o modal de segurança */
+#security-modal .bg-white {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para o modal de ajuda */
+#help-modal .bg-white {
+    background: var(--bg-secondary) !important; /* Fundo mais escuro para o modal */
+}
+
+#security-modal .text-gray-900,
+#security-modal .text-gray-600 {
+    color: var(--text-primary) !important;
+}
+
+/* SOBRESCRITA para o header do chat */
+.bg-gradient-to-r.from-blue-600.to-indigo-700 {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+}
+
+/* SOBRESCRITA para o input do chat */
+#chat-input.bg-white {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+#chat-input.border-gray-300 {
+    border-color: var(--glass-border) !important;
+}
+
+/* SOBRESCRITA para o botão de enviar */
+#send-chat-btn.bg-gradient-to-r.from-blue-600.to-indigo-700 {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+}
+
+/* SOBRESCRITA para o fundo do input do chat */
+.bg-gray-50\/50 {
+    background: var(--card-bg) !important;
+}
+
+/* SOBRESCRITA para o fundo da seção de dicas importantes */
+#help-modal .from-blue-50.to-indigo-50 {
+    background: linear-gradient(135deg, var(--card-bg), var(--bg-tertiary)) !important;
+    border-color: var(--glass-border) !important;
+}
+
+/* SOBRESCRITA para o fundo do header do chat */
+.bg-white\/80 {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para o fundo da sidebar */
+.bg-white\/90 {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para o fundo do header principal */
+.bg-white\/80 {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para sombras */
+.shadow-sm,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+/* SOBRESCRITA para elementos específicos que podem ter problemas */
+.bg-blue-50,
+.bg-green-50,
+.bg-red-50,
+.bg-yellow-50,
+.bg-purple-50,
+.bg-indigo-50,
+.bg-orange-50,
+.bg-teal-50 {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+}
+
+/* SOBRESCRITA para textos coloridos específicos */
+.text-blue-800,
+.text-green-800,
+.text-red-800,
+.text-yellow-800,
+.text-purple-800,
+.text-indigo-800,
+.text-orange-800,
+.text-teal-800 {
+    color: var(--text-primary) !important;
+}
+
+.text-blue-700,
+.text-green-700,
+.text-red-700,
+.text-yellow-700,
+.text-purple-700,
+.text-indigo-700,
+.text-orange-700,
+.text-teal-700 {
+    color: var(--text-secondary) !important;
+}
+
+/* SOBRESCRITA para bordas coloridas */
+.border-blue-200,
+.border-green-200,
+.border-red-200,
+.border-yellow-200,
+.border-purple-200,
+.border-indigo-200,
+.border-orange-200,
+.border-teal-200 {
+    border-color: var(--glass-border) !important;
+}
+
+/* SOBRESCRITA para o fundo do chat principal */
+.bg-white\/80.backdrop-blur-sm {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* SOBRESCRITA para o fundo da sidebar */
+.bg-white\/90.backdrop-blur-sm {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* SOBRESCRITA para o fundo do header */
+.bg-white\/80.backdrop-blur-sm {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* SOBRESCRITA para o fundo do modal de ajuda */
+.bg-white.rounded-3xl {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para o fundo do modal de segurança */
+.bg-white.rounded-2xl {
+    background: var(--glass-bg) !important;
+}
+
+/* SOBRESCRITA para o fundo da tela de login */
+.bg-white\/95.backdrop-blur-sm {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* SOBRESCRITA para o fundo dos inputs da tela de login */
+.bg-white\/80.backdrop-blur-sm {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões da tela de login */
+.bg-gradient-to-r.from-blue-600.to-indigo-700 {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+}
+
+.bg-gradient-to-r.from-green-600.to-emerald-700 {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-green)) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões de configuração */
+.bg-blue-500\/10 {
+    background: rgba(0, 122, 255, 0.1) !important;
+}
+
+.bg-red-500\/10 {
+    background: rgba(255, 59, 48, 0.1) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões de configuração no hover */
+.bg-blue-500\/10:hover {
+    background: rgba(0, 122, 255, 0.2) !important;
+}
+
+.bg-red-500\/10:hover {
+    background: rgba(255, 59, 48, 0.2) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões de configuração */
+.text-blue-600 {
+    color: var(--accent-blue) !important;
+}
+
+.text-red-600 {
+    color: var(--accent-red) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões de configuração no hover */
+.hover\:bg-blue-500\/20:hover {
+    background: rgba(0, 122, 255, 0.2) !important;
+}
+
+.hover\:bg-red-500\/20:hover {
+    background: rgba(255, 59, 48, 0.2) !important;
+}
+
+/* SOBRESCRITA para o fundo dos botões de configuração no hover */
+.hover\:text-blue-700:hover {
+    color: var(--accent-blue) !important;
+}
+
+.hover\:text-red-700:hover {
+    color: var(--accent-red) !important;
+}
+
+/* Scrollbars personalizados */
+::-webkit-scrollbar-track {
+    background: var(--card-bg) !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--glass-border) !important;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-blue) !important;
+}
+
+/* Efeitos especiais */
+.glass-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+/* Animações suaves */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Melhorias específicas para configurações */
+.bg-gray-50 {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+.bg-gray-50:hover {
+    background: var(--hover-bg) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--shadow-color) !important;
+}
+
+/* Checkboxes personalizados */
+input[type="checkbox"] {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+    accent-color: var(--accent-blue) !important;
+}
+
+input[type="checkbox"]:checked {
+    background: var(--accent-blue) !important;
+    border-color: var(--accent-blue) !important;
+}
+
+/* Labels e textos de configuração */
+label {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+}
+
+.text-sm {
+    color: var(--text-secondary) !important;
+}
+
+/* Efeitos de hover para elementos interativos */
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+/* Gradientes especiais */
+.from-green-50,
+.to-emerald-50 {
+    background: linear-gradient(135deg, rgba(48, 209, 88, 0.1), rgba(16, 185, 129, 0.1)) !important;
+    border-color: rgba(48, 209, 88, 0.3) !important;
+}
+
+.from-blue-50,
+.to-indigo-50 {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(139, 92, 246, 0.1)) !important;
+    border-color: rgba(0, 122, 255, 0.3) !important;
+}
+
+
+.modal-content {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 20px 60px var(--shadow-color) !important;
+}
+
+.modal-backdrop {
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Melhorias para elementos específicos que podem ter problemas de visibilidade */
+.bg-gradient-to-br {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+}
+
+.bg-gradient-to-r {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+}
+
+/* Melhorias para o painel de contas rápido */
+#quick-accounts-panel {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+.quick-account-item {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-primary) !important;
+}
+
+.quick-account-item:hover {
+    background: var(--hover-bg) !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3) !important;
+}
+
+/* Melhorias para o overlay do sidebar mobile */
+#sidebar-overlay {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Melhorias para o botão de menu mobile */
+#mobile-menu-btn {
+    background: var(--glass-bg) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-primary) !important;
+}
+
+#mobile-menu-btn:hover {
+    background: var(--hover-bg) !important;
+    transform: scale(1.05);
+}
+
+/* Melhorias para o chat input */
+#chat-input {
+    background: var(--card-bg) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-primary) !important;
+}
+
+#chat-input:focus {
+    background: var(--hover-bg) !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+}
+
+/* Melhorias para o botão de enviar */
+#send-chat-btn {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    color: white !important;
+}
+
+#send-chat-btn:hover {
+    background: linear-gradient(135deg, #0056cc, #8b5cf6) !important;
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.4) !important;
+}
+
+/* Melhorias para o indicador de aba ativa */
+.tab-indicator {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    box-shadow: 0 2px 10px rgba(0, 122, 255, 0.4) !important;
+}
+
+.border-gray-200 {
+    border-color: var(--border-color) !important;
+}
+
+/* Estilos para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Estilos para foco de acessibilidade */
+.focus-visible:focus {
+    outline: 2px solid var(--accent-blue) !important;
+    outline-offset: 2px;
+}
+
+/* Estilos para o botão de menu mobile */
+#mobile-menu-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#mobile-menu-btn:hover {
+    background: var(--hover-bg) !important;
+    transform: scale(1.05);
+}
+
+/* Estilos para o overlay do sidebar */
+#sidebar-overlay {
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para o chat principal */
+#chat-messages {
+    scroll-behavior: smooth;
+    height: calc(100vh - 600px);
+    overflow-y: auto;
+}
+
+/* Estilos para o textarea do chat */
+#chat-input {
+    font-family: inherit;
+    line-height: 1.5;
+    transition: all 0.2s ease-in-out;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border) var(--card-bg) !important;
+}
+
+#chat-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-input::-webkit-scrollbar-track {
+    background: var(--card-bg) !important;
+    border-radius: 3px;
+}
+
+#chat-input::-webkit-scrollbar-thumb {
+    background: var(--glass-border) !important;
+    border-radius: 3px;
+    transition: background 0.2s ease-in-out;
+}
+
+#chat-input::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-blue) !important;
+}
+
+#chat-input:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.15) !important;
+    outline: none;
+}
+
+#chat-input::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 1;
+}
+
+/* Estilos para o botão de enviar */
+#send-chat-btn:active {
+    transform: scale(0.95);
+}
+
+/* Estilos para mensagens do usuário - SOBRESCRITA FINAL */
+.user-message {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    color: white !important;
+    margin-left: auto;
+    border-radius: 20px 20px 4px 20px;
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3) !important;
+}
+
+/* Estilos para mensagens do assistente - SOBRESCRITA FINAL */
+.assistant-message {
+    background: var(--glass-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+    margin-right: auto;
+    border-radius: 20px 20px 20px 4px;
+}
+
+/* Estilos para o sistema de abas */
+.tab-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.tab-btn:hover {
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important;
+}
+
+.tab-panel {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-panel.hidden {
+    display: none;
+}
+
+/* Estilos para o painel de contas rápido */
+#quick-accounts-panel {
+    transition: all 0.3s ease-in-out;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+#quick-accounts-panel.show {
+    max-height: 200px;
+    opacity: 1;
+}
+
+#quick-accounts-panel.hidden {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* Animação para o ícone do olho */
+#toggle-accounts-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+#toggle-accounts-btn:hover {
+    transform: scale(1.1);
+}
+
+#toggle-accounts-btn.active {
+    color: var(--accent-blue) !important;
+    transform: scale(1.1);
+}
+
+/* Estilos para as contas no painel rápido - SOBRESCRITA FINAL */
+.quick-account-item {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    transition: all 0.2s ease-in-out;
+    color: var(--text-primary) !important;
+}
+
+.quick-account-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color) !important;
+    border-color: var(--accent-blue) !important;
+    background: var(--hover-bg) !important;
+}
+
+/* Indicador de aba ativa - SOBRESCRITA FINAL */
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+    transition: all 0.3s ease-in-out;
+    border-radius: 1px;
+}
+
+/* Melhorias para elementos que precisam de atenção especial */
+.bg-white {
+    background: var(--glass-bg) !important;
+}
+
+
+
+.text-white {
+    color: var(--text-primary) !important;
+}
+
+.shadow-sm,
+.shadow-lg,
+.shadow-xl {
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+}
+
+/* Melhorias para elementos de status e indicadores */
+.bg-green-500,
+.bg-red-500,
+.bg-yellow-500,
+.bg-blue-500 {
+    color: white !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Melhorias para tooltips e elementos flutuantes */
+[title]:hover::after {
+    background: var(--glass-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Melhorias para elementos de loading */
+.loading::after {
+    border-color: rgba(0, 122, 255, 0.2) !important;
+    border-top-color: var(--accent-blue) !important;
+}
+
+/* Responsividade para as abas */
+@media (max-width: 1024px) {
+    .tab-btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    .tab-btn {
+        font-size: 0.875rem;
+        padding: 0.75rem 1rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    .tab-btn {
+        font-size: 1rem;
+        padding: 1rem 1.25rem;
+    }
+}
+
+/* Estilos para os modais de segurança e gerenciamento */
+.modal-backdrop {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.modal-content {
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Estilos para o código de segurança */
+#security-code {
+    letter-spacing: 0.2em;
+    font-family: 'Courier New', monospace;
+    background: var(--card-bg) !important;
+    border: 2px solid var(--glass-border) !important;
+    transition: all 0.2s ease-in-out;
+    color: var(--text-primary) !important;
+}
+
+#security-code:hover {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2) !important;
+}
+
+/* Estilos para os botões de ação nos modais */
+.modal-action-btn {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease-in-out;
+}
+
+.modal-action-btn:hover::before {
+    left: 100%;
+}
+
+/* Estilos para a lista de contas no modal */
+.account-item {
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.account-item:hover {
+    border-color: var(--glass-border) !important;
+    background: var(--hover-bg) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px var(--shadow-color) !important;
+}
+
+/* Estilos para o botão de remoção de conta */
+.delete-account-btn {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+.delete-account-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.delete-account-btn:active {
+    transform: scale(0.95);
+}
+
+/* Estilos para o input do código de segurança */
+#security-code-input {
+    transition: all 0.2s ease-in-out;
+    border: 2px solid var(--glass-border) !important;
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+#security-code-input:focus {
+    border-color: var(--accent-red) !important;
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1) !important;
+    transform: scale(1.02);
+}
+
+/* Estilos para o botão de confirmação desabilitado */
+#confirm-security-btn:disabled {
+    background: var(--text-muted) !important;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#confirm-security-btn:disabled:hover {
+    background: var(--text-muted) !important;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Estilos especiais para o nome Dinah - VERSÃO SIMPLIFICADA */
+.dinah-text {
+    background: linear-gradient(45deg, #8b5cf6, #ec4899, #3b82f6, #8b5cf6);
+    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: dinah-gradient 3s ease-in-out infinite;
+    text-shadow: 
+        0 0 20px rgba(139, 92, 246, 0.5),
+        0 0 40px rgba(236, 72, 153, 0.3),
+        0 0 60px rgba(59, 130, 246, 0.2);
+    display: inline-block;
+}
+
+@keyframes dinah-gradient {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.dinah-3d {
+    text-shadow: 
+        0 1px 0 #8b5cf6,
+        0 2px 0 #ec4899,
+        0 3px 0 #3b82f6,
+        0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: perspective(1000px) rotateX(15deg);
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.dinah-3d:hover {
+    transform: perspective(1000px) rotateX(0deg) scale(1.05);
+}
+
+/* Efeito de partículas flutuantes para o nome Dinah */
+.dinah-particles {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.dinah-particles::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: dinah-float 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes dinah-float {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    100% {
+        transform: translate(-20px, -20px) rotate(360deg);
+    }
+}
+
+/* Efeito de brilho pulsante */
+.dinah-pulse {
+    animation: dinah-pulse-glow 2s ease-in-out infinite alternate;
+    display: inline-block;
+}
+
+@keyframes dinah-pulse-glow {
+    from {
+        filter: brightness(1) drop-shadow(0 0 10px rgba(139, 92, 246, 0.5));
+    }
+    to {
+        filter: brightness(1.2) drop-shadow(0 0 20px rgba(139, 92, 246, 0.8));
+    }
+}
+
+/* Efeito de borda animada */
+.dinah-border {
+    position: relative;
+    display: inline-block;
+}
+
+.dinah-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, #8b5cf6, #ec4899, #3b82f6, #8b5cf6);
+    background-size: 400% 400%;
+    border-radius: inherit;
+    animation: dinah-border-rotate 3s linear infinite;
+    opacity: 0.3;
+}
+
+.dinah-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: inherit;
+    border-radius: inherit;
+}
+
+@keyframes dinah-border-rotate {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 400% 50%;
+    }
+}
+
+/* ===== ESTILOS PARA OS NOVOS BOTÕES DE AÇÃO ===== */
+
+/* Container dos botões de ação */
+.header-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 0.75rem;
+}
+
+/* Botão de Manutenção */
+#maintenance-btn {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #d97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+
+#maintenance-btn:hover {
+    background: rgba(245, 158, 11, 0.25) !important;
+    color: #b45309 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Classe comum para botões de ação do header */
+.header-action-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-weight: 500 !important;
+    min-width: fit-content !important;
+}
+
+.header-action-btn:hover {
+    transform: translateY(-1px) scale(1.02) !important;
+}
+
+.header-action-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+/* Botão de Ajuda */
+#help-btn {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #60a5fa !important; /* Azul mais claro para melhor visibilidade */
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+#help-btn:hover {
+    background: rgba(59, 130, 246, 0.3) !important;
+    color: #93c5fd !important; /* Azul ainda mais claro no hover */
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Responsividade para os botões */
+@media (max-width: 640px) {
+    .header-action-buttons {
+        gap: 0.25rem;
+        margin-right: 0.5rem;
+    }
+    
+    .header-action-btn {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .header-action-btn span:last-child {
+        display: none !important;
+    }
+}
+
+/* Espaçamento seguro para evitar cliques acidentais */
+#maintenance-btn + #help-btn {
+    margin-left: 0.5rem;
+}
+
+#help-btn + #logout-btn {
+    margin-left: 0.75rem;
+}
+
+/* Efeito de foco para acessibilidade */
+.header-action-btn:focus-visible {
+    outline: 2px solid var(--accent-blue) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA DROPDOWNS DE CONTAS FIXAS ===== */
+
+/* Estilização específica para os dropdowns de categorias e frequência */
+#fixed-bill-category,
+#fixed-bill-frequency {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--glass-border) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Estilização das opções dos dropdowns */
+#fixed-bill-category option,
+#fixed-bill-frequency option {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    padding: 8px 12px !important;
+}
+
+/* Hover nas opções */
+#fixed-bill-category option:hover,
+#fixed-bill-frequency option:hover {
+    background: var(--hover-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Opção selecionada */
+#fixed-bill-category option:checked,
+#fixed-bill-frequency option:checked {
+    background: var(--accent-blue) !important;
+    color: white !important;
+}
+
+/* Estilo para o dropdown quando aberto */
+#fixed-bill-category:focus,
+#fixed-bill-frequency:focus {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+    background: var(--hover-bg) !important;
+}
+
+/* Estilo para o dropdown quando aberto (Chrome/Safari) */
+#fixed-bill-category:focus option,
+#fixed-bill-frequency:focus option {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Estilo para o dropdown quando aberto (Firefox) */
+#fixed-bill-category:-moz-focusring,
+#fixed-bill-frequency:-moz-focusring {
+    color: transparent !important;
+    text-shadow: 0 0 0 var(--text-primary) !important;
+}
+
+/* Estilo para o dropdown quando aberto (Edge) */
+#fixed-bill-category::-ms-expand,
+#fixed-bill-frequency::-ms-expand {
+    display: none;
+}
+
+/* Estilização específica para labels dos dropdowns */
+label[for="fixed-bill-category"],
+label[for="fixed-bill-frequency"] {
+    color: var(--text-primary) !important;
+}
+
+/* Estilização para o modal de contas fixas */
+#manage-fixed-bills-modal {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border-color: var(--glass-border) !important;
+}
+
+/* Estilização para o título do modal */
+#manage-fixed-bills-modal h3 {
+    color: var(--text-primary) !important;
+}
+
+/* Estilização para o botão de fechar */
+#close-manage-fixed-bills-btn {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+#close-manage-fixed-bills-btn:hover {
+    background: var(--hover-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+

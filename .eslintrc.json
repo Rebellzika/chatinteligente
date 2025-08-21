@@ -1,0 +1,88 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    // Prevenção de duplicatas
+    "no-dupe-keys": "error",
+    "no-dupe-args": "error",
+    "no-dupe-class-members": "error",
+    "no-dupe-else-if": "error",
+    "no-duplicate-imports": "error",
+    
+    // Organização de código
+    "no-multiple-empty-lines": ["error", { "max": 2 }],
+    "no-trailing-spaces": "error",
+    "eol-last": "error",
+    "comma-dangle": ["error", "never"],
+    "semi": ["error", "always"],
+    "quotes": ["error", "double"],
+    
+    // Estrutura de funções
+    "func-style": ["error", "declaration"],
+    "no-func-assign": "error",
+    "no-import-assign": "error",
+    "no-param-reassign": "warn",
+    
+    // Nomenclatura
+    "camelcase": ["error", { "properties": "never" }],
+    "new-cap": "error",
+    "no-underscore-dangle": "off",
+    
+    // Imports e exports
+    "import/no-duplicates": "error",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "newlines-between": "always"
+      }
+    ],
+    
+    // Comentários e documentação
+    "spaced-comment": ["error", "always"],
+    "multiline-comment-style": ["error", "starred-block"],
+    
+    // Prevenção de erros comuns
+    "no-unused-vars": "warn",
+    "no-undef": "error",
+    "no-console": "warn",
+    "no-debugger": "error",
+    
+    // Estrutura de arquivos
+    "max-lines": ["warn", { "max": 1000 }],
+    "max-lines-per-function": ["warn", { "max": 100 }],
+    "max-params": ["warn", { "max": 4 }],
+    
+    // Qualidade do código
+    "complexity": ["warn", { "max": 10 }],
+    "max-depth": ["warn", { "max": 4 }],
+    "max-nested-callbacks": ["warn", { "max": 3 }]
+  },
+  "overrides": [
+    {
+      "files": ["src/chatProcessor.js"],
+      "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
+        "complexity": "off"
+      }
+    }
+  ]
+}
