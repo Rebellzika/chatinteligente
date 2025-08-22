@@ -429,46 +429,55 @@
 
             <!-- Conteúdo Principal - Chat Focado -->
             <main id="main-content" class="flex-1 flex flex-col">
-                <!-- Área do Chat Principal -->
-                <div class="flex-1 flex flex-col p-4 lg:p-6 xl:p-8 2xl:p-10">
-                    <!-- Header do Chat -->
-                    <div class="text-center mb-6 xl:mb-8 2xl:mb-10">
-                        <h2 class="text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold text-gray-800 mb-2 dinah-text dinah-3d">
-                            Dinah
-                        </h2>
-                                                                <p class="text-gray-600 text-lg xl:text-xl 2xl:text-2xl">Seu assistente financeiro inteligente e elegante</p>
-                                        <p class="text-blue-100 text-sm xl:text-base 2xl:text-lg mt-2">💡 Gerencie suas contas fixas clicando no botão "Gerenciar" na seção de Contas Fixas</p>
-                    </div>
-
-                    <!-- Chat Principal -->
-                    <div class="flex-1 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 flex flex-col max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto w-full">
-                        <!-- Header do Chat -->
-                        <div class="p-6 xl:p-8 2xl:p-10 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-t-3xl">
+                <!-- Área do Chat Principal Otimizada -->
+                <div class="flex-1 flex flex-col p-3 lg:p-4 xl:p-6 2xl:p-8">
+                    <!-- Chat Principal Otimizado -->
+                    <div class="chat-container flex-1 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 flex flex-col max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto w-full">
+                        <!-- Header do Chat Compacto -->
+                        <div class="p-3 lg:p-4 xl:p-5 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-t-3xl">
                             <div class="flex justify-between items-center">
-                                <div class="flex items-center space-x-3 xl:space-x-4">
-                                    <div class="w-12 h-12 xl:w-16 xl:h-16 2xl:w-20 2xl:h-20 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-2xl flex items-center justify-center relative group overflow-hidden">
+                                <div class="flex items-center space-x-2 lg:space-x-3">
+                                    <div class="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl flex items-center justify-center relative group overflow-hidden">
                                         <div class="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 animate-pulse"></div>
                                         <!-- Ícone Abstrato Moderno -->
-                                        <div class="relative z-10 w-8 h-8 xl:w-10 xl:h-10 2xl:w-12 2xl:h-12 flex items-center justify-center">
-                                            <div class="absolute w-6 h-6 xl:w-8 xl:h-8 2xl:w-10 2xl:h-10 bg-white/90 rounded-lg transform rotate-45 shadow-lg"></div>
-                                            <div class="absolute w-5 h-5 xl:w-6 xl:h-6 2xl:w-8 2xl:h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-md transform rotate-45"></div>
-                                            <div class="absolute w-3 h-3 xl:w-4 xl:h-4 2xl:w-5 2xl:h-5 bg-white/80 rounded-sm transform rotate-45"></div>
+                                        <div class="relative z-10 w-5 h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 flex items-center justify-center">
+                                            <div class="absolute w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 bg-white/90 rounded-md transform rotate-45 shadow-md"></div>
+                                            <div class="absolute w-3 h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 bg-gradient-to-br from-purple-400 to-pink-400 rounded-sm transform rotate-45"></div>
+                                            <div class="absolute w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 bg-white/80 rounded transform rotate-45"></div>
                                         </div>
-                                        <div class="absolute inset-0 bg-gradient-to-r from-purple-600/50 via-pink-600/50 to-blue-600/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110"></div>
+                                        <div class="absolute inset-0 bg-gradient-to-r from-purple-600/50 via-pink-600/50 to-blue-600/50 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110"></div>
                                     </div>
                                     <div>
-                                        <h3 class="text-white font-bold text-lg xl:text-xl 2xl:text-2xl relative dinah-text">
+                                        <h3 class="text-white font-bold text-sm lg:text-base xl:text-lg relative dinah-text">
                                             Dinah
                                         </h3>
-                                        <p class="text-blue-100 text-sm xl:text-base 2xl:text-lg">Sempre online para ajudar</p>
+                                        <p class="text-blue-100 text-xs lg:text-sm">Sempre online para ajudar</p>
                                     </div>
                                 </div>
-
+                                
+                                <div class="flex items-center space-x-2">
+                                    <!-- Indicador de Status Inteligente -->
+                                    <div class="inline-flex items-center space-x-1.5 bg-white/20 px-2 py-1 rounded-full border border-white/30">
+                                        <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                                        <span class="text-xs text-white font-medium">Online</span>
+                                    </div>
+                                    
+                                    <!-- Botão de Maximizar Chat -->
+                                    <button 
+                                        id="maximize-chat-btn"
+                                        class="text-blue-100 hover:text-white p-1.5 rounded-lg hover:bg-blue-500/20 transition-all duration-200"
+                                        title="Maximizar área do chat"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Mensagens do Chat -->
-                        <div id="chat-messages" class="h-[calc(100vh-600px)] overflow-y-auto p-6 xl:p-8 2xl:p-10 space-y-4 xl:space-y-6">
+                        <!-- Mensagens do Chat Otimizadas -->
+                        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 lg:p-6 xl:p-8 space-y-3 lg:space-y-4 xl:space-y-6 min-h-0">
                             <div class="flex justify-start">
                                 <div class="flex items-start space-x-3 xl:space-x-4 max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
                                     <div class="w-8 h-8 xl:w-10 xl:h-10 2xl:w-12 2xl:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0 relative group overflow-hidden">
@@ -498,24 +507,27 @@
                             </div>
                         </div>
                         
-                        <!-- Input do Chat -->
-                        <div class="p-6 xl:p-8 2xl:p-10 border-t border-gray-100 bg-gray-50/50 rounded-b-3xl">
+                        <!-- Input do Chat Otimizado - FIXO -->
+                        <div class="chat-input-container p-4 lg:p-6 xl:p-8 border-t border-gray-100 bg-gray-50/50 rounded-b-3xl flex-shrink-0">
                             <div class="flex space-x-3 xl:space-x-4">
                                 <textarea 
                                     id="chat-input"
                                     placeholder="Ex: Gastei R$50 em almoço, paguei o aluguel, Qual meu saldo?, Resumo melhorado, Historico detalhado..."
-                                    class="flex-1 px-4 py-3 xl:px-6 xl:py-4 2xl:px-8 2xl:py-5 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base xl:text-lg 2xl:text-xl bg-white shadow-sm resize-none overflow-y-auto"
+                                    class="flex-1 px-3 py-2 lg:px-4 lg:py-3 xl:px-6 xl:py-4 border border-gray-300 rounded-xl lg:rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base xl:text-lg bg-white shadow-sm resize-none overflow-y-auto"
                                     rows="1"
-                                    style="min-height: 60px; max-height: 200px;"
+                                    style="min-height: 48px; max-height: 150px;"
                                 ></textarea>
                                 <button 
                                     id="send-chat-btn"
-                                    class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-3 xl:px-8 xl:py-4 2xl:px-10 2xl:py-5 rounded-2xl hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                                    class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-2 lg:px-6 lg:py-3 xl:px-8 xl:py-4 rounded-xl lg:rounded-2xl hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex-shrink-0"
                                 >
-                                    Enviar
+                                    <span class="hidden sm:inline">Enviar</span>
+                                    <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
                                 </button>
                             </div>
-                            <p class="text-xs xl:text-sm 2xl:text-base text-gray-500 mt-2 xl:mt-3 text-center">💡 Dica: Use linguagem natural! Ex: "paguei o aluguel", "qual meu saldo?", "resumo do mês"</p>
+                            <p class="text-xs lg:text-sm xl:text-base text-gray-500 mt-2 lg:mt-3 text-center">💡 Dica: Use linguagem natural! Ex: "paguei o aluguel", "qual meu saldo?", "resumo do mês"</p>
                         </div>
                     </div>
                 </div>
@@ -1095,5 +1107,77 @@
     <!-- Scripts -->
     <script type="module" src="src/firebase-config.js"></script>
     <script type="module" src="src/app.js"></script>
+    
+    <!-- Script de Otimização do Chat -->
+    <script>
+        // Sistema de Otimização do Chat
+        document.addEventListener('DOMContentLoaded', function() {
+            const maximizeChatBtn = document.getElementById('maximize-chat-btn');
+            const mainContent = document.getElementById('main-content');
+            const sidebar = document.getElementById('sidebar');
+            const chatMessages = document.getElementById('chat-messages');
+            
+            if (maximizeChatBtn) {
+                maximizeChatBtn.addEventListener('click', function() {
+                    // Toggle do modo maximizado
+                    const isMaximized = mainContent.classList.contains('chat-maximized');
+                    
+                    if (isMaximized) {
+                        // Restaurar layout normal
+                        mainContent.classList.remove('chat-maximized');
+                        sidebar.classList.remove('hidden');
+                        maximizeChatBtn.innerHTML = `
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            </svg>
+                        `;
+                        maximizeChatBtn.title = 'Maximizar área do chat';
+                    } else {
+                        // Maximizar chat
+                        mainContent.classList.add('chat-maximized');
+                        sidebar.classList.add('hidden');
+                        maximizeChatBtn.innerHTML = `
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4V4z"></path>
+                            </svg>
+                        `;
+                        maximizeChatBtn.title = 'Restaurar layout';
+                    }
+                    
+                    // Scroll para o topo das mensagens
+                    chatMessages.scrollTop = 0;
+                });
+            }
+            
+            // Otimização automática para telas pequenas
+            function optimizeForSmallScreens() {
+                const isSmallScreen = window.innerWidth < 768;
+                const headerChat = document.querySelector('.text-center.mb-4');
+                
+                if (headerChat) {
+                    if (isSmallScreen) {
+                        headerChat.classList.add('mb-2');
+                        headerChat.classList.remove('mb-4', 'lg:mb-6', 'xl:mb-8');
+                    } else {
+                        headerChat.classList.remove('mb-2');
+                        headerChat.classList.add('mb-4', 'lg:mb-6', 'xl:mb-8');
+                    }
+                }
+            }
+            
+            // Aplicar otimizações
+            optimizeForSmallScreens();
+            window.addEventListener('resize', optimizeForSmallScreens);
+            
+            // Auto-resize do textarea
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
