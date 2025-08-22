@@ -135,6 +135,56 @@ const FIXED_BILLS_KNOWLEDGE = {
     }
 };
 
+// 🛡️ FUNÇÕES UTILITÁRIAS DE SEGURANÇA
+/**
+ * Formata valor monetário de forma segura, evitando erros de null/undefined
+ * @param {any} value - Valor a ser formatado
+ * @param {number} decimals - Número de casas decimais (padrão: 2)
+ * @returns {string} Valor formatado ou '0.00' em caso de erro
+ */
+function safeFormatCurrency(value, decimals = 2) {
+    try {
+        if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
+            return value.toFixed(decimals);
+        }
+        return '0'.padEnd(decimals + 1, '0');
+    } catch (error) {
+        console.error('Erro ao formatar valor monetário:', error, 'Valor:', value);
+        return '0'.padEnd(decimals + 1, '0');
+    }
+}
+
+/**
+ * Valida se um valor é um número válido
+ * @param {any} value - Valor a ser validado
+ * @returns {boolean} True se for número válido
+ */
+function isValidNumber(value) {
+    return typeof value === 'number' && !isNaN(value) && isFinite(value);
+}
+
+/**
+ * Valida se um objeto tem propriedades obrigatórias
+ * @param {object} obj - Objeto a ser validado
+ * @param {string[]} requiredProps - Propriedades obrigatórias
+ * @returns {boolean} True se todas as propriedades existem
+ */
+function hasRequiredProperties(obj, requiredProps) {
+    if (!obj || typeof obj !== 'object') return false;
+    return requiredProps.every(prop => obj.hasOwnProperty(prop) && obj[prop] != null);
+}
+
+/**
+ * Filtra array removendo itens inválidos
+ * @param {Array} array - Array a ser filtrado
+ * @param {Function} validator - Função de validação
+ * @returns {Array} Array filtrado
+ */
+function filterValidItems(array, validator = (item) => item != null) {
+    if (!Array.isArray(array)) return [];
+    return array.filter(validator);
+}
+
 // Função para calcular similaridade entre palavras (distância de Levenshtein)
 function calculateWordSimilarity(word1, word2) {
     const matrix = [];
@@ -1194,10 +1244,18 @@ function processFixedBillPaymentIntent(data, userAccounts, fixedBills = []) {
     console.log('💰 Processando pagamento de conta fixa:', data);
     console.log('🔍 Contas fixas disponíveis:', fixedBills);
     
-    if (!data.bill) {
+    // ✅ VALIDAÇÃO DEFENSIVA: Verificar dados de entrada
+    if (!data || !data.bill) {
         return {
             status: 'error',
-            response: 'Não consegui identificar qual conta fixa foi paga. Pode ser mais específico?'
+            response: '❌ Erro: Dados inválidos para processar pagamento de conta fixa.'
+        };
+    }
+    
+    if (!userAccounts || !Array.isArray(userAccounts)) {
+        return {
+            status: 'error',
+            response: '❌ Erro: Dados das contas bancárias inválidos.'
         };
     }
     
@@ -1205,26 +1263,36 @@ function processFixedBillPaymentIntent(data, userAccounts, fixedBills = []) {
     const amount = data.amount;
     const bank = data.bank;
     
+    // ✅ VALIDAÇÃO: Verificar se bill tem nome
+    if (!bill.name) {
+        return {
+            status: 'error',
+            response: '❌ Erro: Nome da conta fixa não identificado.'
+        };
+    }
+    
     // 🔧 CORREÇÃO CRÍTICA: Buscar conta fixa real do banco de dados
     let realBill = null;
-    if (fixedBills && fixedBills.length > 0) {
+    if (fixedBills && Array.isArray(fixedBills) && fixedBills.length > 0) {
         console.log('🔍 Buscando conta fixa no banco com nome:', bill.name);
         
         // Buscar por nome exato primeiro
-        realBill = fixedBills.find(fb => fb.name.toLowerCase() === bill.name.toLowerCase());
+        realBill = fixedBills.find(fb => fb && fb.name && fb.name.toLowerCase() === bill.name.toLowerCase());
         
         // Se não encontrar, buscar por similaridade
         if (!realBill) {
             realBill = fixedBills.find(fb => 
-                fb.name.toLowerCase().includes(bill.name.toLowerCase()) || 
-                bill.name.toLowerCase().includes(fb.name.toLowerCase())
+                fb && fb.name && (
+                    fb.name.toLowerCase().includes(bill.name.toLowerCase()) || 
+                    bill.name.toLowerCase().includes(fb.name.toLowerCase())
+                )
             );
         }
         
         // Se ainda não encontrar, buscar por sinônimos
         if (!realBill) {
             for (const fb of fixedBills) {
-                if (FIXED_BILLS_KNOWLEDGE[fb.name] && FIXED_BILLS_KNOWLEDGE[fb.name].synonyms) {
+                if (fb && fb.name && FIXED_BILLS_KNOWLEDGE[fb.name] && FIXED_BILLS_KNOWLEDGE[fb.name].synonyms) {
                     for (const synonym of FIXED_BILLS_KNOWLEDGE[fb.name].synonyms) {
                         if (bill.name.toLowerCase().includes(synonym.toLowerCase()) || 
                             synonym.toLowerCase().includes(bill.name.toLowerCase())) {
@@ -1241,39 +1309,60 @@ function processFixedBillPaymentIntent(data, userAccounts, fixedBills = []) {
     
     console.log('🔍 Conta fixa encontrada no banco:', realBill);
     
-    // 🔧 CORREÇÃO CRÍTICA: Verificar saldo antes de confirmar pagamento
-    const finalAmount = realBill ? realBill.amount : amount;
+    // 🔧 CORREÇÃO CRÍTICA: Validação defensiva com fallbacks seguros
+    let finalAmount = 0;
     
+    // ✅ VALIDAÇÃO SEGURA: Verificar se realBill.amount é válido
+    if (realBill && isValidNumber(realBill.amount)) {
+        finalAmount = realBill.amount;
+    } else if (isValidNumber(amount)) {
+        finalAmount = amount;
+    }
+    
+    // ✅ VALIDAÇÃO: Verificar se o valor é válido
     if (!finalAmount || finalAmount <= 0) {
         return {
             status: 'error',
-            response: `❌ Erro: Valor da conta fixa "${bill.name}" não foi definido corretamente. Valor detectado: R$ ${finalAmount.toFixed(2)}.\n\n💡 **Para corrigir:**\n• Verifique se a conta fixa foi cadastrada com valor correto\n• Use o painel de contas fixas para definir o valor\n• Tente: "paguei R$ 100 do aluguel"`
+            response: `❌ Erro: Valor da conta fixa "${bill.name}" não foi definido corretamente.\n\n💡 **Para corrigir:**\n• Verifique se a conta fixa foi cadastrada com valor correto\n• Use o painel de contas fixas para definir o valor\n• Tente: "paguei R$ 100 do aluguel"\n\n🔧 **Status atual:**\n• Conta fixa: ${bill.name}\n• Valor configurado: ${realBill ? 'Sim' : 'Não'}\n• Valor informado: ${amount ? `R$ ${amount.toFixed(2)}` : 'Não informado'}`
+        };
+    }
+    
+    // ✅ VALIDAÇÃO SEGURA: Filtrar contas válidas
+    const validAccounts = filterValidItems(userAccounts, acc => 
+        hasRequiredProperties(acc, ['name', 'id', 'balance']) && 
+        isValidNumber(acc.balance)
+    );
+    
+    if (validAccounts.length === 0) {
+        return {
+            status: 'error',
+            response: '❌ Erro: Nenhuma conta bancária válida encontrada.'
         };
     }
     
     // Verificar se há alguma conta com saldo suficiente
-    const accountsWithSufficientBalance = userAccounts.filter(acc => acc && acc.name && acc.id && (acc.balance || 0) >= finalAmount);
+    const accountsWithSufficientBalance = validAccounts.filter(acc => acc.balance >= finalAmount);
     
     if (accountsWithSufficientBalance.length === 0) {
-        // Nenhuma conta tem saldo suficiente
+            // Nenhuma conta tem saldo suficiente
         return {
             status: 'error',
-            response: `❌ Nenhuma conta tem saldo suficiente para pagar ${bill.name} (R$ ${finalAmount.toFixed(2)}).\n\n💡 **Sugestões:**\n• Adicione dinheiro a uma das suas contas\n• Reduza o valor da conta fixa\n• Use uma transferência de outra conta primeiro\n\n💰 **Seus saldos atuais:**\n${userAccounts.filter(acc => acc && acc.name && acc.id).map(acc => `• ${acc.name}: R$ ${(acc.balance || 0).toFixed(2)}`).join('\n')}`
+            response: `❌ Nenhuma conta tem saldo suficiente para pagar ${bill.name} (R$ ${safeFormatCurrency(finalAmount)}).\n\n💡 **Sugestões:**\n• Adicione dinheiro a uma das suas contas\n• Reduza o valor da conta fixa\n• Use uma transferência de outra conta primeiro\n\n💰 **Seus saldos atuais:**\n${validAccounts.map(acc => `• ${acc.name}: R$ ${safeFormatCurrency(acc.balance)}`).join('\n')}`
         };
     }
     
     // Há saldo suficiente, confirmar pagamento
     let response = `✅ Perfeito! Registrei o pagamento da conta fixa "${bill.name}". `;
     
-    if (amount) {
-        response += `Valor: R$ ${amount.toFixed(2)}. `;
-    } else if (realBill && realBill.amount) {
-        response += `Valor: R$ ${realBill.amount.toFixed(2)}. `;
+    if (isValidNumber(amount)) {
+        response += `Valor: R$ ${safeFormatCurrency(amount)}. `;
+    } else if (realBill && isValidNumber(realBill.amount)) {
+        response += `Valor: R$ ${safeFormatCurrency(realBill.amount)}. `;
     } else {
-        response += `Valor: R$ ${finalAmount.toFixed(2)}. `;
+        response += `Valor: R$ ${safeFormatCurrency(finalAmount)}. `;
     }
     
-    if (bank) {
+    if (bank && bank.name) {
         response += `Banco usado: ${bank.name}. `;
     } else {
         response += `Qual conta você usou para pagar? `;
@@ -2284,6 +2373,17 @@ function isSpecificQueryIntent(message) {
     // Verificar se contém período
     const hasPeriod = correctPeriodWords.some(period => lowerMsg.includes(period));
     
+    // 🔧 CORREÇÃO: Verificar se é uma declaração de gasto (não uma consulta)
+    // Se a mensagem contém um valor monetário e "gastei", é uma declaração, não uma consulta
+    const hasMonetaryValue = /\d+[.,]?\d*/.test(lowerMsg);
+    const hasGastei = lowerMsg.includes('gastei') || lowerMsg.includes('paguei') || lowerMsg.includes('comprei');
+    
+    // Se tem valor monetário + verbo de gasto, é uma declaração, não uma consulta
+    if (hasMonetaryValue && hasGastei) {
+        console.log('🔍 isSpecificQueryIntent: Detectado como declaração de gasto, não como consulta:', message);
+        return false;
+    }
+    
     // Dividir a mensagem em palavras para verificação com tolerância
     const words = lowerMsg.split(/\s+/);
     
@@ -3289,7 +3389,11 @@ export const processClarificationResponse = (response, pendingAction, userAccoun
                 
                 return {
                     status: 'clarification',
-                    response: `Em qual conta você ${pendingAction.type === 'add_expense' ? 'gastou' : 'recebeu'} R$ ${(pendingAction.amount || 0).toFixed(2)}?\n\n💡 **Responda apenas com o nome da conta** (ex: "Nubank", "PicPay")`,
+                    response: `Em qual conta você ${pendingAction.type === 'add_expense' ? 'gastou' : 'recebeu'} R$ ${(pendingAction.amount || 0).toFixed(2)}?\n\n💡 **Clique em uma das opções abaixo ou digite o nome da conta**`,
+                    options: userAccounts.filter(acc => acc && acc.id && acc.name).map(acc => ({ 
+                        name: `${acc.name} - Saldo: R$ ${(acc.balance || 0).toFixed(2)}`, 
+                        id: acc.id 
+                    })),
                     pendingAction: {
                         type: pendingAction.type,
                         amount: pendingAction.amount,
