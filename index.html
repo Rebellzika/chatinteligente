@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinah - Chat Financeiro</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Tela de Login -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-96">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-blue-400 mb-2">Dinah</h1>
+                <p class="text-gray-400">Seu assistente financeiro inteligente</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input type="email" id="email" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div id="auth-error" class="text-red-400 text-sm hidden"></div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" id="login-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                        Entrar
+                    </button>
+                    <button type="button" id="signup-btn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                        Cadastrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tela Principal -->
+    <div id="app-screen" class="hidden h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <h1 class="text-2xl font-bold text-blue-400">Dinah</h1>
+                <span class="text-sm text-gray-400">Assistente Financeiro</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="manage-accounts-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                    Gerenciar Contas
+                </button>
+                <button id="manage-bills-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                    Contas Fixas
+                </button>
+                <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-200">
+                    Sair
+                </button>
+            </div>
+        </header>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="w-80 bg-gray-800 border-r border-gray-700 p-6 overflow-y-auto">
+                <!-- Estatísticas Financeiras -->
+                <div class="space-y-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4">Resumo Financeiro</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Saldo Total:</span>
+                                <span id="total-balance" class="text-green-400 font-semibold">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Receitas do Mês:</span>
+                                <span id="monthly-income" class="text-green-400">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Despesas do Mês:</span>
+                                <span id="monthly-expenses" class="text-red-400">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Contas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-200">Suas Contas</h3>
+                            <button id="add-account-btn" class="text-blue-400 hover:text-blue-300 text-sm">
+                                + Adicionar
+                            </button>
+                        </div>
+                        <div id="accounts-list" class="space-y-2">
+                            <!-- Contas serão inseridas aqui dinamicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Contas Fixas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-200">Contas Fixas</h3>
+                            <button id="add-bill-btn" class="text-blue-400 hover:text-blue-300 text-sm">
+                                + Adicionar
+                            </button>
+                        </div>
+                        <div id="fixed-bills-section" class="space-y-2">
+                            <!-- Contas fixas mais caras serão inseridas aqui dinamicamente -->
+                        </div>
+                        <button id="view-all-bills-btn" class="text-blue-400 hover:text-blue-300 text-sm mt-3 w-full">
+                            Ver Contas Fixas →
+                        </button>
+                    </div>
+
+                    <!-- Transações Recentes -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4">Transações Recentes</h3>
+                        <div id="recent-transactions" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!-- Transações serão inseridas aqui dinamicamente -->
+                        </div>
+                        <button id="view-all-transactions-btn" class="text-blue-400 hover:text-blue-300 text-sm mt-2">
+                            Ver todas →
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Área do Chat -->
+            <main id="main-content" class="flex-1 flex flex-col">
+                <!-- Mensagens do Chat -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <!-- Mensagens serão inseridas aqui dinamicamente -->
+                </div>
+
+                <!-- Input do Chat -->
+                <div class="border-t border-gray-700 p-4">
+                    <div class="flex space-x-3">
+                        <textarea 
+                            id="chat-input" 
+                            placeholder="Digite sua mensagem... (ex: 'Gastei R$ 50 no mercado')"
+                            class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            rows="2"
+                        ></textarea>
+                        <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition duration-200 self-end">
+                            Enviar
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Gerenciamento de Contas -->
+    <div id="accounts-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Gerenciar Contas</h3>
+                <button id="close-accounts-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Lista de Contas -->
+            <div id="accounts-management-list" class="space-y-3 mb-6">
+                <!-- Contas serão listadas aqui -->
+            </div>
+
+            <!-- Botão para deletar todas as transações -->
+            <div class="border-t border-gray-700 pt-4 mb-6">
+                <h4 class="text-lg font-medium text-gray-200 mb-4">Limpeza de Dados</h4>
+                <div class="bg-red-900 bg-opacity-20 border border-red-600 rounded-lg p-4">
+                    <p class="text-red-300 text-sm mb-3">
+                        ⚠️ <strong>Atenção:</strong> Esta ação irá deletar TODAS as transações e resetar os saldos das contas para zero. 
+                        Esta ação não pode ser desfeita e afetará apenas os seus dados (não da sua esposa).
+                    </p>
+                    <button id="delete-all-transactions-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        🗑️ Deletar Todas as Transações
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulário para Adicionar/Editar Conta -->
+            <div class="border-t border-gray-700 pt-4">
+                <h4 id="account-form-title" class="text-lg font-medium text-gray-200 mb-4">Adicionar Nova Conta</h4>
+                <form id="account-form" class="space-y-4">
+                    <input type="hidden" id="account-id" value="">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="account-name" class="block text-sm font-medium text-gray-300 mb-2">Nome da Conta</label>
+                            <input type="text" id="account-name" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="account-balance" class="block text-sm font-medium text-gray-300 mb-2">Saldo Inicial</label>
+                            <input type="number" id="account-balance" step="0.01" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" id="save-account-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200">
+                            Salvar
+                        </button>
+                        <button type="button" id="cancel-account-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Gerenciamento de Contas Fixas -->
+    <div id="bills-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Gerenciar Contas Fixas</h3>
+                <button id="close-bills-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Lista de Contas Fixas -->
+            <div id="bills-management-list" class="space-y-3 mb-6">
+                <!-- Contas fixas serão listadas aqui -->
+            </div>
+
+            <!-- Formulário para Adicionar/Editar Conta Fixa -->
+            <div class="border-t border-gray-700 pt-4">
+                <h4 id="bill-form-title" class="text-lg font-medium text-gray-200 mb-4">Adicionar Nova Conta Fixa</h4>
+                <form id="bill-form" class="space-y-4">
+                    <input type="hidden" id="bill-id" value="">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="bill-name" class="block text-sm font-medium text-gray-300 mb-2">Nome da Conta</label>
+                            <input type="text" id="bill-name" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="bill-amount" class="block text-sm font-medium text-gray-300 mb-2">Valor</label>
+                            <input type="number" id="bill-amount" step="0.01" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="bill-due-day" class="block text-sm font-medium text-gray-300 mb-2">Dia de Vencimento</label>
+                            <input type="number" id="bill-due-day" min="1" max="31" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="bill-category" class="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+                        <select id="bill-category" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="moradia">Moradia</option>
+                            <option value="energia">Energia</option>
+                            <option value="agua">Água</option>
+                            <option value="internet">Internet</option>
+                            <option value="telefone">Telefone</option>
+                            <option value="gas">Gás</option>
+                            <option value="condominio">Condomínio</option>
+                            <option value="seguro">Seguro</option>
+                            <option value="escola">Educação</option>
+                            <option value="cartao">Cartão de Crédito</option>
+                            <option value="streaming">Streaming</option>
+                            <option value="academia">Academia</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="bill-start-date" class="block text-sm font-medium text-gray-300 mb-2">Data Inicial</label>
+                        <input type="date" id="bill-start-date" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <p class="text-xs text-gray-400 mt-1">Data em que a conta fixa começou a valer (importante para controle de períodos)</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" id="save-bill-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200">
+                            Salvar
+                        </button>
+                        <button type="button" id="cancel-bill-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Visualização de Contas Fixas -->
+    <div id="bills-view-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Contas Fixas</h3>
+                <button id="close-bills-view-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="flex space-x-4 mb-4">
+                <select id="bill-status-filter" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos os status</option>
+                    <option value="pending">Pendente</option>
+                    <option value="partial">Paga Parcial</option>
+                    <option value="paid">Paga</option>
+                    <option value="overdue">Vencida</option>
+                    <option value="due-soon">Quase Vencendo</option>
+                </select>
+                <select id="bill-category-filter" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todas as categorias</option>
+                    <option value="moradia">Moradia</option>
+                    <option value="energia">Energia</option>
+                    <option value="agua">Água</option>
+                    <option value="internet">Internet</option>
+                    <option value="telefone">Telefone</option>
+                    <option value="gas">Gás</option>
+                    <option value="condominio">Condomínio</option>
+                    <option value="seguro">Seguro</option>
+                    <option value="escola">Educação</option>
+                    <option value="cartao">Cartão de Crédito</option>
+                    <option value="streaming">Streaming</option>
+                    <option value="academia">Academia</option>
+                    <option value="outros">Outros</option>
+                </select>
+            </div>
+            
+            <!-- Lista de Contas Fixas -->
+            <div id="bills-view-list" class="space-y-3">
+                <!-- Contas fixas serão listadas aqui com status e botões de pagamento -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pagamento Parcial -->
+    <div id="partial-payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Pagamento Parcial</h3>
+                <button id="close-partial-payment-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Conta Fixa</label>
+                    <div id="partial-payment-bill-name" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor Total</label>
+                    <div id="partial-payment-total-amount" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor Já Pago</label>
+                    <div id="partial-payment-paid-amount" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor Restante</label>
+                    <div id="partial-payment-remaining-amount" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label for="partial-payment-amount" class="block text-sm font-medium text-gray-300 mb-2">Valor do Pagamento</label>
+                    <input type="number" id="partial-payment-amount" step="0.01" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="partial-payment-account" class="block text-sm font-medium text-gray-300 mb-2">Conta para Pagamento</label>
+                    <select id="partial-payment-account" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <!-- Contas serão inseridas aqui dinamicamente -->
+                    </select>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="confirm-partial-payment-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Confirmar Pagamento
+                    </button>
+                    <button id="cancel-partial-payment-btn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pagamento Completo -->
+    <div id="full-payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Pagamento Completo</h3>
+                <button id="close-full-payment-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Conta Fixa</label>
+                    <div id="full-payment-bill-name" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor Total</label>
+                    <div id="full-payment-total-amount" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor Já Pago</label>
+                    <div id="full-payment-paid-amount" class="text-gray-200 font-medium"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Valor a Pagar</label>
+                    <div id="full-payment-amount-to-pay" class="text-gray-200 font-medium text-green-400"></div>
+                </div>
+                
+                <div>
+                    <label for="full-payment-account" class="block text-sm font-medium text-gray-300 mb-2">Conta para Pagamento</label>
+                    <select id="full-payment-account" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <!-- Contas serão inseridas aqui dinamicamente -->
+                    </select>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="confirm-full-payment-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Confirmar Pagamento Completo
+                    </button>
+                    <button id="cancel-full-payment-btn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Transações -->
+    <div id="transactions-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-200">Histórico de Transações</h3>
+                <button id="close-transactions-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="flex space-x-4 mb-4">
+                <select id="transaction-filter-type" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos os tipos</option>
+                    <option value="expense">Despesas</option>
+                    <option value="income">Receitas</option>
+                    <option value="transfer">Transferências</option>
+                </select>
+                <select id="transaction-filter-account" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todas as contas</option>
+                </select>
+                <input type="date" id="transaction-filter-date" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Lista de Transações -->
+            <div id="transactions-list" class="space-y-2">
+                <!-- Transações serão listadas aqui -->
+            </div>
+            
+            <!-- Paginação -->
+            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-700">
+                <div class="text-sm text-gray-400">
+                    Mostrando <span id="transactions-start">1</span> a <span id="transactions-end">10</span> de <span id="transactions-total">0</span> transações
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prev-page-btn" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        Anterior
+                    </button>
+                    <button id="next-page-btn" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        Próxima
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="text-center">
+                <h3 class="text-lg font-semibold text-gray-200 mb-4" id="confirm-title">Confirmar Exclusão</h3>
+                <p class="text-gray-300 mb-6" id="confirm-message">Tem certeza que deseja excluir este item?</p>
+                <div class="flex space-x-3 justify-center">
+                    <button id="confirm-yes-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Sim, Excluir
+                    </button>
+                    <button id="confirm-no-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Conta Fixa -->
+    <div id="edit-bill-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-white">Editar Conta Fixa</h3>
+                        <button id="close-edit-bill-modal" class="text-gray-400 hover:text-white text-2xl">
+                            ×
+                        </button>
+                    </div>
+                    
+                    <form id="edit-bill-form" class="space-y-4">
+                        <input type="hidden" id="edit-bill-id" value="">
+                        
+                        <div>
+                            <label for="edit-bill-name" class="block text-sm font-medium text-gray-300 mb-2">Nome da Conta</label>
+                            <input type="text" id="edit-bill-name" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="edit-bill-amount" class="block text-sm font-medium text-gray-300 mb-2">Valor</label>
+                                <input type="number" id="edit-bill-amount" step="0.01" min="0" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="edit-bill-due-day" class="block text-sm font-medium text-gray-300 mb-2">Dia de Vencimento</label>
+                                <input type="number" id="edit-bill-due-day" min="1" max="31" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-bill-category" class="block text-sm font-medium text-gray-300 mb-2">Categoria</label>
+                            <select id="edit-bill-category" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="moradia">Moradia</option>
+                                <option value="energia">Energia</option>
+                                <option value="agua">Água</option>
+                                <option value="internet">Internet</option>
+                                <option value="telefone">Telefone</option>
+                                <option value="gas">Gás</option>
+                                <option value="condominio">Condomínio</option>
+                                <option value="seguro">Seguro</option>
+                                <option value="escola">Educação</option>
+                                <option value="cartao">Cartão de Crédito</option>
+                                <option value="streaming">Streaming</option>
+                                <option value="academia">Academia</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-bill-start-date" class="block text-sm font-medium text-gray-300 mb-2">Data Inicial</label>
+                            <input type="date" id="edit-bill-start-date" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <p class="text-xs text-gray-400 mt-1">Data em que a conta fixa começou a valer</p>
+                        </div>
+                        
+                        <div class="flex space-x-3 pt-4">
+                            <button type="submit" id="update-bill-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200 flex-1">
+                                Atualizar
+                            </button>
+                            <button type="button" id="cancel-edit-bill-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200 flex-1">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Histórico de Pagamentos -->
+    <div id="payment-history-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-white">Histórico de Pagamentos</h3>
+                        <button id="close-payment-history-modal" class="text-gray-400 hover:text-white text-2xl">
+                            ×
+                        </button>
+                    </div>
+                    
+                    <div id="payment-history-content" class="space-y-4">
+                        <!-- Conteúdo do histórico será carregado aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificação Bonito -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div id="notification-icon" class="text-4xl mr-4">
+                            ℹ️
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="notification-title" class="text-xl font-semibold text-white">Notificação</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p id="notification-message" class="text-gray-300"></p>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button id="notification-ok-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition duration-200">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Bonito -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div id="confirmation-icon" class="text-4xl mr-4">
+                            ❓
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="confirmation-title" class="text-xl font-semibold text-white">Confirmar Ação</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p id="confirmation-message" class="text-gray-300"></p>
+                    </div>
+                    
+                    <div class="flex space-x-3 justify-end">
+                        <button id="confirmation-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md transition duration-200">
+                            Cancelar
+                        </button>
+                        <button id="confirmation-confirm-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition duration-200">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso Bonito -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="text-4xl mr-4">✅</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white">Sucesso!</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p id="success-message" class="text-gray-300"></p>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button id="success-ok-btn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition duration-200">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Erro Bonito -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="text-4xl mr-4">❌</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white">Erro</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p id="error-message" class="text-gray-300"></p>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button id="error-ok-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition duration-200">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="src/firestoreService.js"></script>
+    <script type="module" src="src/nlu-advanced.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
