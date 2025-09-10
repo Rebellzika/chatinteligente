@@ -825,17 +825,21 @@ async function executeAction(payload) {
                 break;
                 
             case 'PAY_FIXED_BILL_CHAT':
+                // 🧠 SISTEMA INTELIGENTE: Processar pagamento restante
                 // Usar a função específica para pagamento de contas fixas
                 const result = await payFixedBill(
                     payload.data.billId,
                     payload.data.paymentAmount,
                     payload.data.accountId,
-                    payload.data.isFullPayment
+                    payload.data.isFullPayment,
+                    null, // targetPeriod
+                    payload.data.isRemainingPayment
                 );
                 
                 const billAccount = accounts.find(acc => acc.id === payload.data.accountId);
                 const billEmoji = '💸';
-                const paymentType = payload.data.isFullPayment ? 'completo' : 'parcial';
+                const paymentType = payload.data.isRemainingPayment ? 'restante' : 
+                                  (payload.data.isFullPayment ? 'completo' : 'parcial');
                 
                 let billMessage = `${billEmoji} **Gasto registrado com sucesso!**\n\n` +
                     `💰 **Valor:** R$ ${payload.data.paymentAmount.toFixed(2)}\n` +
@@ -844,7 +848,7 @@ async function executeAction(payload) {
                     `📅 **Data:** ${new Date().toLocaleDateString('pt-BR')}`;
                 
                 // Adicionar informação sobre pagamento parcial
-                if (!payload.data.isFullPayment && payload.data.remainingAmount > 0) {
+                if (!payload.data.isFullPayment && !payload.data.isRemainingPayment && payload.data.remainingAmount > 0) {
                     billMessage += `\n\n⚠️ **Pagamento parcial:** Ainda restam R$ ${payload.data.remainingAmount.toFixed(2)} para pagar.`;
                 }
                 
