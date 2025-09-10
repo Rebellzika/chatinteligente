@@ -2489,3 +2489,361 @@ function getPaymentButtonText(status, paymentInfo) {
         return `✅ ${status.billDescription} - Todos os períodos pagos`;
     }
 }
+
+// ========================================
+// SISTEMA DE ANÁLISE FINANCEIRA INTELIGENTE
+// ========================================
+
+// Sistema de análise comparativa mensal
+export async function analyzeMonthlyComparison(userId, currentMonth = null) {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+    
+    try {
+        // Se não especificado, usar mês atual
+        if (!currentMonth) {
+            const today = new Date();
+            currentMonth = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+        }
+        
+        const lastMonth = getPreviousMonth(currentMonth);
+        
+        // Buscar gastos dos dois meses
+        const currentExpenses = await getMonthlyExpenses(userId, currentMonth);
+        const lastExpenses = await getMonthlyExpenses(userId, lastMonth);
+        
+        // Calcular diferenças por categoria
+        const comparison = compareExpenses(currentExpenses, lastExpenses);
+        
+        // Análise inteligente baseada em educação financeira
+        const advice = generateFinancialAdvice(comparison);
+        
+        return {
+            currentMonth,
+            lastMonth,
+            comparison,
+            advice,
+            summary: generateComparisonSummary(comparison)
+        };
+        
+    } catch (error) {
+        throw new Error(`Erro ao analisar comparação mensal: ${error.message}`);
+    }
+}
+
+// Função auxiliar para obter mês anterior
+function getPreviousMonth(monthString) {
+    const [year, month] = monthString.split('-').map(Number);
+    const date = new Date(year, month - 1, 1);
+    date.setMonth(date.getMonth() - 1);
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+}
+
+// Buscar gastos de um mês específico
+async function getMonthlyExpenses(userId, month) {
+    const [year, monthNum] = month.split('-').map(Number);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+    
+    const expensesQuery = query(
+        collection(db, 'transactions'),
+        where('userId', '==', userId),
+        where('type', '==', 'expense'),
+        where('date', '>=', startDate),
+        where('date', '<=', endDate)
+    );
+    
+    const snapshot = await getDocs(expensesQuery);
+    const expenses = {};
+    
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        const category = data.category || 'outros';
+        if (!expenses[category]) {
+            expenses[category] = 0;
+        }
+        expenses[category] += data.amount || 0;
+    });
+    
+    return expenses;
+}
+
+// Comparar gastos entre dois meses
+function compareExpenses(currentExpenses, lastExpenses) {
+    const allCategories = new Set([
+        ...Object.keys(currentExpenses),
+        ...Object.keys(lastExpenses)
+    ]);
+    
+    const comparison = {
+        categories: [],
+        totalCurrent: Object.values(currentExpenses).reduce((sum, val) => sum + val, 0),
+        totalLast: Object.values(lastExpenses).reduce((sum, val) => sum + val, 0),
+        totalDifference: 0,
+        totalPercentageChange: 0
+    };
+    
+    for (let category of allCategories) {
+        const current = currentExpenses[category] || 0;
+        const last = lastExpenses[category] || 0;
+        const difference = current - last;
+        const percentageChange = last > 0 ? (difference / last) * 100 : 0;
+        
+        comparison.categories.push({
+            name: category,
+            current,
+            last,
+            difference,
+            percentageChange,
+            trend: difference > 0 ? 'increasing' : difference < 0 ? 'decreasing' : 'stable'
+        });
+    }
+    
+    comparison.totalDifference = comparison.totalCurrent - comparison.totalLast;
+    comparison.totalPercentageChange = comparison.totalLast > 0 ? 
+        (comparison.totalDifference / comparison.totalLast) * 100 : 0;
+    
+    return comparison;
+}
+
+// Gerar conselhos financeiros inteligentes
+function generateFinancialAdvice(comparison) {
+    const advice = [];
+    
+    comparison.categories.forEach(category => {
+        if (category.percentageChange > 20) { // Aumento de 20%+
+            if (category.name === 'moradia' || category.name === 'aluguel') {
+                advice.push({
+                    category: category.name,
+                    type: 'warning',
+                    message: `📈 Seus gastos com ${category.name} aumentaram ${category.percentageChange.toFixed(1)}%. ` +
+                            `Como é um gasto fixo essencial, isso pode indicar reajuste contratual. ` +
+                            `Considere negociar ou buscar alternativas se possível.`,
+                    severity: 'medium',
+                    suggestion: 'Verifique se há possibilidade de renegociação',
+                    impact: 'high'
+                });
+            } else if (category.name === 'alimentação' || category.name === 'lazer') {
+                advice.push({
+                    category: category.name,
+                    type: 'alert',
+                    message: `⚠️ Atenção! Seus gastos com ${category.name} aumentaram ${category.percentageChange.toFixed(1)}%. ` +
+                            `Este é um gasto variável que pode ser controlado. ` +
+                            `Considere reduzir para manter sua saúde financeira.`,
+                    severity: 'high',
+                    suggestion: 'Tente reduzir este gasto no próximo mês',
+                    impact: 'medium'
+                });
+            } else {
+                advice.push({
+                    category: category.name,
+                    type: 'info',
+                    message: `📊 Seus gastos com ${category.name} aumentaram ${category.percentageChange.toFixed(1)}%. ` +
+                            `Monitore este aumento para entender se é necessário.`,
+                    severity: 'low',
+                    suggestion: 'Analise se este aumento é justificado',
+                    impact: 'low'
+                });
+            }
+        } else if (category.percentageChange < -20) { // Redução de 20%+
+            advice.push({
+                category: category.name,
+                type: 'success',
+                message: `✅ Ótimo! Seus gastos com ${category.name} diminuíram ${Math.abs(category.percentageChange).toFixed(1)}%. ` +
+                        `Continue mantendo este controle!`,
+                severity: 'low',
+                suggestion: 'Mantenha este padrão de economia',
+                impact: 'positive'
+            });
+        }
+    });
+    
+    // Conselho geral sobre o total
+    if (comparison.totalPercentageChange > 15) {
+        advice.push({
+            category: 'geral',
+            type: 'alert',
+            message: `🚨 Seus gastos totais aumentaram ${comparison.totalPercentageChange.toFixed(1)}%. ` +
+                    `Isso pode comprometer sua saúde financeira. Revise seus gastos.`,
+            severity: 'high',
+            suggestion: 'Faça uma revisão completa dos seus gastos',
+            impact: 'high'
+        });
+    } else if (comparison.totalPercentageChange < -10) {
+        advice.push({
+            category: 'geral',
+            type: 'success',
+            message: `🎉 Excelente! Seus gastos totais diminuíram ${Math.abs(comparison.totalPercentageChange).toFixed(1)}%. ` +
+                    `Você está no caminho certo para uma vida financeira saudável!`,
+            severity: 'low',
+            suggestion: 'Continue com este padrão de economia',
+            impact: 'positive'
+        });
+    }
+    
+    return advice;
+}
+
+// Gerar resumo da comparação
+function generateComparisonSummary(comparison) {
+    const summary = {
+        totalChange: comparison.totalDifference,
+        totalPercentageChange: comparison.totalPercentageChange,
+        trend: comparison.totalDifference > 0 ? 'aumento' : comparison.totalDifference < 0 ? 'redução' : 'estável',
+        biggestIncrease: null,
+        biggestDecrease: null,
+        categoriesCount: comparison.categories.length
+    };
+    
+    // Encontrar maior aumento e redução
+    let maxIncrease = 0;
+    let maxDecrease = 0;
+    
+    comparison.categories.forEach(category => {
+        if (category.percentageChange > maxIncrease) {
+            maxIncrease = category.percentageChange;
+            summary.biggestIncrease = category;
+        }
+        if (category.percentageChange < maxDecrease) {
+            maxDecrease = category.percentageChange;
+            summary.biggestDecrease = category;
+        }
+    });
+    
+    return summary;
+}
+
+// Sistema de sugestões de economia
+export async function generateSavingsSuggestions(userId) {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+    
+    try {
+        const monthlyIncome = await getMonthlyIncome(userId);
+        const monthlyExpenses = await getMonthlyExpenses(userId);
+        const emergencyFund = await getEmergencyFund(userId);
+        
+        const suggestions = [];
+        
+        // REGRA 1: Gastos com alimentação > 30% da renda
+        const foodSpending = monthlyExpenses['alimentação'] || monthlyExpenses['alimentacao'] || 0;
+        const foodPercentage = monthlyIncome > 0 ? (foodSpending / monthlyIncome) * 100 : 0;
+        
+        if (foodPercentage > 30) {
+            suggestions.push({
+                type: 'high_food_spending',
+                priority: 'high',
+                message: `🍽️ Seus gastos com alimentação representam ${foodPercentage.toFixed(1)}% da sua renda. ` +
+                        `O ideal seria entre 15-25%. Considere cozinhar mais em casa e reduzir delivery.`,
+                suggestion: 'Cozinhar mais em casa e reduzir delivery',
+                potentialSavings: foodSpending * 0.2, // 20% de economia
+                impact: 'high'
+            });
+        }
+        
+        // REGRA 2: Gastos com lazer > 15% da renda
+        const entertainmentSpending = monthlyExpenses['lazer'] || monthlyExpenses['entretenimento'] || 0;
+        const entertainmentPercentage = monthlyIncome > 0 ? (entertainmentSpending / monthlyIncome) * 100 : 0;
+        
+        if (entertainmentPercentage > 15) {
+            suggestions.push({
+                type: 'high_entertainment_spending',
+                priority: 'medium',
+                message: `🎮 Seus gastos com lazer representam ${entertainmentPercentage.toFixed(1)}% da sua renda. ` +
+                        `Procure atividades gratuitas ou mais baratas.`,
+                suggestion: 'Buscar atividades gratuitas ou mais baratas',
+                potentialSavings: entertainmentSpending * 0.3, // 30% de economia
+                impact: 'medium'
+            });
+        }
+        
+        // REGRA 3: Sem reserva de emergência
+        const totalMonthlyExpenses = Object.values(monthlyExpenses).reduce((sum, val) => sum + val, 0);
+        const recommendedEmergencyFund = totalMonthlyExpenses * 3; // 3 meses de gastos
+        
+        if (emergencyFund < recommendedEmergencyFund) {
+            suggestions.push({
+                type: 'no_emergency_fund',
+                priority: 'high',
+                message: `🚨 Você não tem reserva de emergência! ` +
+                        `Recomendo guardar pelo menos 3 meses de gastos (R$ ${recommendedEmergencyFund.toFixed(2)}).`,
+                suggestion: 'Criar reserva de emergência',
+                potentialSavings: recommendedEmergencyFund - emergencyFund,
+                impact: 'critical'
+            });
+        }
+        
+        // REGRA 4: Gastos com transporte > 20% da renda
+        const transportSpending = monthlyExpenses['transporte'] || monthlyExpenses['gasolina'] || 0;
+        const transportPercentage = monthlyIncome > 0 ? (transportSpending / monthlyIncome) * 100 : 0;
+        
+        if (transportPercentage > 20) {
+            suggestions.push({
+                type: 'high_transport_spending',
+                priority: 'medium',
+                message: `🚗 Seus gastos com transporte representam ${transportPercentage.toFixed(1)}% da sua renda. ` +
+                        `Considere usar transporte público ou carona.`,
+                suggestion: 'Usar transporte público ou carona',
+                potentialSavings: transportSpending * 0.25, // 25% de economia
+                impact: 'medium'
+            });
+        }
+        
+        return {
+            suggestions,
+            totalPotentialSavings: suggestions.reduce((sum, s) => sum + s.potentialSavings, 0),
+            priorityCount: {
+                high: suggestions.filter(s => s.priority === 'high').length,
+                medium: suggestions.filter(s => s.priority === 'medium').length,
+                low: suggestions.filter(s => s.priority === 'low').length
+            }
+        };
+        
+    } catch (error) {
+        throw new Error(`Erro ao gerar sugestões de economia: ${error.message}`);
+    }
+}
+
+// Função auxiliar para obter renda mensal
+async function getMonthlyIncome(userId) {
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+    
+    const incomeQuery = query(
+        collection(db, 'transactions'),
+        where('userId', '==', userId),
+        where('type', '==', 'income'),
+        where('date', '>=', startDate),
+        where('date', '<=', endDate)
+    );
+    
+    const snapshot = await getDocs(incomeQuery);
+    let totalIncome = 0;
+    
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        totalIncome += data.amount || 0;
+    });
+    
+    return totalIncome;
+}
+
+// Função auxiliar para obter reserva de emergência
+async function getEmergencyFund(userId) {
+    // Por enquanto, vamos usar o saldo total das contas como reserva
+    const accountsQuery = query(
+        collection(db, 'accounts'),
+        where('userId', '==', userId)
+    );
+    
+    const snapshot = await getDocs(accountsQuery);
+    let totalBalance = 0;
+    
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        totalBalance += data.balance || 0;
+    });
+    
+    return totalBalance;
+}
