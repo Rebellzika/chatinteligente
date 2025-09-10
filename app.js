@@ -29,7 +29,9 @@ import {
     checkAndExpandPeriods,
     getMonthPaymentStatus,
     getFixedBillPaymentHistoryOptimized,
-    getMultipleMonthsStatusOptimized
+    getMultipleMonthsStatusOptimized,
+    analyzeMonthlyComparison,
+    generateSavingsSuggestions
 } from './src/firestoreService.js';
 import { db, auth } from './firebase-config.js';
 import { 
@@ -399,6 +401,29 @@ function setupEventListeners() {
     manageBillsBtn.addEventListener('click', () => showModal(billsModal));
     addAccountBtn.addEventListener('click', () => showModal(accountsModal));
     addBillBtn.addEventListener('click', () => showModal(billsModal));
+    
+    // Modal de ajuda
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeHelpModal = document.getElementById('close-help-modal');
+    
+    if (helpBtn && helpModal && closeHelpModal) {
+        helpBtn.addEventListener('click', () => {
+            helpModal.classList.remove('hidden');
+        });
+        
+        closeHelpModal.addEventListener('click', () => {
+            helpModal.classList.add('hidden');
+        });
+        
+        // Fechar ao clicar fora
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                helpModal.classList.add('hidden');
+            }
+        });
+    }
+    
     viewAllBillsBtn.addEventListener('click', async () => {
         showModal(billsViewModal);
         // Verificar e expandir períodos automaticamente
@@ -909,6 +934,26 @@ async function executeAction(payload) {
             case 'QUERY_DEBTS':
                 const debts = await queryDebts(payload.data);
                 addChatMessage('assistant', debts);
+                break;
+                
+            case 'MONTHLY_COMPARISON':
+                try {
+                    const comparison = await analyzeMonthlyComparison(payload.data.userId);
+                    addChatMessage('assistant', comparison);
+                } catch (error) {
+                    console.error('Erro na comparação mensal:', error);
+                    addChatMessage('assistant', '❌ Erro ao gerar comparação mensal. Tente novamente.');
+                }
+                break;
+                
+            case 'SAVINGS_SUGGESTIONS':
+                try {
+                    const suggestions = await generateSavingsSuggestions(payload.data.userId);
+                    addChatMessage('assistant', suggestions);
+                } catch (error) {
+                    console.error('Erro nas sugestões de economia:', error);
+                    addChatMessage('assistant', '❌ Erro ao gerar sugestões de economia. Tente novamente.');
+                }
                 break;
                 
             default:
