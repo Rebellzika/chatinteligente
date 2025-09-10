@@ -2,6 +2,323 @@
 // Este sistema transforma o Dinah em um assistente financeiro de nível ChatGPT
 
 // ========================================
+// SISTEMA ANTI-CONFLITO DE INTENÇÕES
+// ========================================
+
+class ConflictPreventionSystem {
+    constructor() {
+        // ANÁLISE DE CONFLITOS IDENTIFICADOS:
+        // 1. "paguei" - conflito entre ADD_EXPENSE e PAY_FIXED_BILL
+        // 2. "quanto" - conflito entre GREETING e QUERY_BALANCE
+        // 3. "quais" - conflito entre GREETING e QUERY_PAID_BILLS
+        // 4. "conta" - conflito entre múltiplas intenções
+        // 5. "tenho" - conflito entre GREETING e QUERY_BALANCE
+        
+        this.contextRules = {
+            // REGRA 1: ADD_EXPENSE - Despesas com valor específico
+            ADD_EXPENSE: {
+                required: ['valor_monetario'],
+                forbidden: ['conta_fixa_especifica', 'transferencia_para_pessoa', 'conta_origem', 'conta_destino'],
+                contextBoost: 3.0,
+                patterns: [
+                    /(?:gastei|desembolsei|apliquei|investi|comprei|saquei|retirei)\s+R?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)/i,
+                    /(?:paguei|mandei|enviei)\s+R?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)\s+(?:para|no|na|em|com)/i,
+                    /(?:foi|debitou)\s+R?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)/i,
+                    /comprei\s+.+\s+(?:por|a)\s+R?\$?\s*[\d,]+/i,
+                    /(?:gasolina|farmácia|farmacia|supermercado|mercado|ifood|rappi|uber|taxi)\s+R?\$?\s*[\d,]+/i
+                ],
+                exclusionPatterns: [
+                    /paguei\s+(?:o|a)\s+(?:aluguel|energia|luz|água|agua|internet|telefone|gás|gas|condomínio|condominio|seguro|escola|cartão|cartao|streaming|academia|plano|mensalidade)/i,
+                    /transferi\s+[\d,]+\s+(?:reais?|de|do)\s+(.+?)\s+para\s+(.+)/i
+                ]
+            },
+            
+            // REGRA 2: PAY_FIXED_BILL - Contas fixas específicas
+            PAY_FIXED_BILL: {
+                required: ['conta_fixa_especifica'],
+                forbidden: ['valor_monetario_especifico', 'conta_origem', 'conta_destino'],
+                contextBoost: 4.0,
+                patterns: [
+                    /(?:paguei|quitei|acabei de pagar)\s+(?:o|a)\s+(?:aluguel|energia|luz|água|agua|internet|telefone|gás|gas|condomínio|condominio|seguro|escola|cartão|cartao|streaming|academia|plano|mensalidade)/i,
+                    /(?:paguei|quitei)\s+(?:o|a)\s+(.+?)\s+(?:com|no|na|usando|pelo|pela)\s+(.+)/i,
+                    /(?:conta|boleto|fatura|prestação|prestacao|parcela)\s+(?:de|do|da)\s+(?:aluguel|energia|luz|água|agua|internet|telefone|gás|gas|condomínio|condominio|seguro|escola|cartão|cartao|streaming|academia|plano|mensalidade)/i
+                ],
+                exclusionPatterns: [
+                    /(?:gastei|desembolsei|apliquei|investi|comprei|saquei|retirei)\s+R?\$?\s*[\d,]+/i,
+                    /transferi\s+[\d,]+\s+(?:reais?|de|do)\s+(.+?)\s+para\s+(.+)/i
+                ]
+            },
+            
+            // REGRA 3: PERFORM_TRANSFER - Transferências entre contas
+            PERFORM_TRANSFER: {
+                required: ['conta_origem', 'conta_destino'],
+                forbidden: ['conta_fixa_especifica'],
+                contextBoost: 3.5,
+                patterns: [
+                    /(?:transferi|transfira|movi|mova|mandei|enviei|passou|movimentei|migrei|passei)\s+[\d,]+\s+(?:reais?|contos?|pila|grana|trocado|trocados)\s+(?:de|do|da)\s+(.+?)\s+para\s+(.+)/i,
+                    /[\d,]+\s+(?:reais?|contos?|pila|grana|trocado|trocados)\s+(?:de|do|da)\s+(.+?)\s+para\s+(.+)/i,
+                    /(?:mover|movimentar|transferir)\s+[\d,]+\s+(?:reais?|contos?|pila|grana|trocado|trocados)\s+(?:de|do|da)\s+(.+?)\s+para\s+(.+)/i
+                ],
+                exclusionPatterns: [
+                    /(?:paguei|quitei)\s+(?:o|a)\s+(?:aluguel|energia|luz|água|agua|internet|telefone|gás|gas|condomínio|condominio|seguro|escola|cartão|cartao|streaming|academia|plano|mensalidade)/i,
+                    /(?:gastei|desembolsei|apliquei|investi|comprei|saquei|retirei)\s+R?\$?\s*[\d,]+/i
+                ]
+            },
+            
+            // REGRA 4: ADD_INCOME - Receitas
+            ADD_INCOME: {
+                required: ['valor_monetario'],
+                forbidden: ['conta_fixa_especifica', 'conta_origem', 'conta_destino'],
+                contextBoost: 2.5,
+                patterns: [
+                    /(?:recebi|ganhei|caiu|entrou|pingou|depositei|chegou)\s+R?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)/i,
+                    /(?:salário|salario|depósito|deposito)\s+(?:de|de\s+)?R?\$?\s*[\d,]+/i,
+                    /(?:transferiram|me enviaram|me mandaram)\s+R?\$?\s*[\d,]+/i,
+                    /(?:entrou|caiu|pingou)\s+(?:na|no)\s+(?:conta|banco)/i
+                ],
+                exclusionPatterns: [
+                    /(?:gastei|desembolsei|apliquei|investi|comprei|saquei|retirei)\s+R?\$?\s*[\d,]+/i,
+                    /transferi\s+[\d,]+\s+(?:reais?|de|do)\s+(.+?)\s+para\s+(.+)/i
+                ]
+            },
+            
+            // REGRA 5: ADD_DEBT - Nova dívida
+            ADD_DEBT: {
+                required: ['valor_monetario'],
+                forbidden: ['conta_fixa_especifica', 'conta_origem', 'conta_destino'],
+                contextBoost: 2.0,
+                patterns: [
+                    /(?:estou devendo|to devendo|devo|fiquei devendo|fiquei devendo)\s+R?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)/i,
+                    /(?:dívida|divida|deve|devendo)\s+(?:de|de\s+)?R?\$?\s*[\d,]+/i,
+                    /(?:emprestou|emprestou-me|emprestou me)\s+R?\$?\s*[\d,]+/i
+                ],
+                exclusionPatterns: [
+                    /quanto\s+(?:estou|to|eu\s+estou|eu\s+to)\s+devendo/i,
+                    /quanto\s+(?:devo|eu\s+devo)/i,
+                    /minhas?\s+d[ií]vidas?/i
+                ]
+            },
+            
+            // REGRA 6: GREETING - Saudações e perguntas gerais (PRIORIDADE MÁXIMA)
+            GREETING: {
+                required: ['pergunta_geral', 'saudacao', 'duvida_geral'],
+                forbidden: ['valor_monetario', 'conta_fixa_especifica', 'conta_origem', 'conta_destino'],
+                contextBoost: 5.0, // MAIOR BOOST para evitar conflitos
+                patterns: [
+                    /^(oi|olá|ola|e aí|eai|eae|salve|fala|bom dia|boa tarde|boa noite)/i,
+                    /(oi|olá|ola|e aí|eai|eae|salve|fala)\s+dinah/i,
+                    /como\s+(você\s+)?funciona/i,
+                    /quais\s+s[ãa]o\s+suas?\s+fun[çc][õo]es/i,
+                    /o\s+que\s+(você\s+)?pode\s+fazer/i,
+                    /quantos\s+anos/i,
+                    /quantos\s+[a-z]+/i,
+                    /quanto\s+[a-z]+/i,
+                    /pergunta/i,
+                    /d[úu]vida/i,
+                    /curiosidade/i,
+                    /saber/i,
+                    /conhecer/i
+                ],
+                exclusionPatterns: [
+                    /(?:gastei|desembolsei|apliquei|investi|comprei|saquei|retirei)\s+R?\$?\s*[\d,]+/i,
+                    /(?:recebi|ganhei|caiu|entrou|pingou|chegou|depositei)\s+R?\$?\s*[\d,]+/i,
+                    /(?:paguei|quitei)\s+(?:o|a)\s+(?:aluguel|energia|luz|água|agua|internet|telefone|gás|gas|condomínio|condominio|seguro|escola|cartão|cartao|streaming|academia|plano|mensalidade)/i,
+                    /transferi\s+[\d,]+\s+(?:reais?|de|do)\s+(.+?)\s+para\s+(.+)/i,
+                    /qual\s+meu\s+saldo/i,
+                    /quanto\s+tenho\s+(?:no|na|em)/i,
+                    /saldo\s+(?:de|do|da)/i
+                ]
+            }
+        };
+        
+        this.conflictResolution = {
+            // Estratégia de resolução por contexto
+            contextual: (intent1, intent2, context) => {
+                const contextScore1 = this.calculateContextScore(intent1, context);
+                const contextScore2 = this.calculateContextScore(intent2, context);
+                return contextScore1 > contextScore2 ? intent1 : intent2;
+            },
+            
+            // Estratégia de resolução por prioridade
+            priority: (intent1, intent2) => {
+                const priority1 = this.getIntentPriority(intent1);
+                const priority2 = this.getIntentPriority(intent2);
+                return priority1 > priority2 ? intent1 : intent2;
+            },
+            
+            // Estratégia de resolução por confiança
+            confidence: (intent1, intent2) => {
+                return intent1.confidence > intent2.confidence ? intent1 : intent2;
+            }
+        };
+    }
+    
+    // Validação rigorosa antes de classificar intenção
+    validateIntent(intent, text, context) {
+        const rules = this.contextRules[intent];
+        if (!rules) return { valid: true, confidence: 1.0 };
+        
+        let validationScore = 0;
+        let maxScore = 0;
+        
+        // Verificar elementos obrigatórios
+        for (let required of rules.required) {
+            maxScore += 1;
+            if (this.hasElement(text, required)) {
+                validationScore += 1;
+            }
+        }
+        
+        // Verificar elementos proibidos (penalização)
+        for (let forbidden of rules.forbidden) {
+            if (this.hasElement(text, forbidden)) {
+                validationScore -= 0.5; // Penalização
+            }
+        }
+        
+        // Verificar padrões específicos
+        for (let pattern of rules.patterns) {
+            if (pattern.test(text)) {
+                validationScore += 0.5; // Bonus por padrão específico
+            }
+        }
+        
+        const confidence = Math.max(0, Math.min(1, validationScore / maxScore));
+        
+        return {
+            valid: confidence > 0.5,
+            confidence: confidence,
+            score: validationScore,
+            maxScore: maxScore
+        };
+    }
+    
+    // Detectar elementos no texto - SISTEMA ULTRA-INTELIGENTE
+    hasElement(text, element) {
+        const textLower = text.toLowerCase();
+        
+        switch (element) {
+            case 'valor_monetario':
+                return /\d+\s*(?:real|reais?|contos?|pila|grana|trocado|trocados)/i.test(text) || 
+                       /R?\$?\s*\d+/i.test(text);
+            
+            case 'conta_fixa_especifica':
+                const fixedBillKeywords = [
+                    'aluguel', 'energia', 'luz', 'água', 'agua', 'internet', 'telefone',
+                    'gás', 'gas', 'condomínio', 'condominio', 'seguro', 'escola',
+                    'cartão', 'cartao', 'streaming', 'academia', 'plano', 'mensalidade',
+                    'netflix', 'spotify', 'youtube', 'prime', 'disney', 'hbo', 'hbo max',
+                    'energia elétrica', 'energia eletrica', 'conta de luz', 'conta de agua',
+                    'conta de água', 'conta de gas', 'conta de gás', 'conta de telefone',
+                    'conta de internet', 'conta de streaming', 'conta de academia'
+                ];
+                return fixedBillKeywords.some(keyword => textLower.includes(keyword));
+            
+            case 'transferencia_para_pessoa':
+                return /transferi\s+[\d,]+\s+(?:reais?|contos?|pila|grana|trocado|trocados)\s+(?:para|pro)\s+(?:o|a|para)\s+[a-záàâãéèêíìîóòôõúùûç]+/i.test(text);
+            
+            case 'conta_origem':
+                return /(?:de|do|da)\s+(.+?)\s+(?:para|pro)/i.test(text);
+            
+            case 'conta_destino':
+                return /(?:para|pro)\s+(.+?)(?:\s|$)/i.test(text);
+            
+            case 'valor_monetario_especifico':
+                return /\bR?\$?\s*[\d,]+\s*(?:reais?|contos?|pila|grana|trocado|trocados)\b/i.test(text);
+            
+            case 'tempo_temporal':
+                const timeKeywords = [
+                    'hoje', 'ontem', 'anteontem', 'semana passada', 'semana passada',
+                    'mês passado', 'mes passado', 'ano passado', 'na segunda', 'terça-feira',
+                    'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado',
+                    'sabado', 'domingo', 'manhã', 'manha', 'tarde', 'noite', 'madrugada'
+                ];
+                return timeKeywords.some(keyword => textLower.includes(keyword));
+            
+            case 'expressao_coloquial':
+                const colloquialKeywords = [
+                    'pila', 'pila', 'contos', 'contos', 'grana', 'um trocado', 'uns trocados',
+                    'isso aí', 'isso ai', 'beleza', 'tá certo', 'ta certo', 'perfeito', 'show',
+                    'valeu', 'obrigado', 'obrigada', 'tranquilo', 'suave', 'de boa', 'de boa'
+                ];
+                return colloquialKeywords.some(keyword => textLower.includes(keyword));
+            
+            default:
+                return false;
+        }
+    }
+    
+    // Resolver conflitos entre intenções
+    resolveConflict(intent1, intent2, text, context) {
+        const validation1 = this.validateIntent(intent1, text, context);
+        const validation2 = this.validateIntent(intent2, text, context);
+        
+        // Se uma intenção é claramente inválida, escolher a outra
+        if (!validation1.valid && validation2.valid) {
+            return { intent: intent2, confidence: validation2.confidence };
+        }
+        if (validation1.valid && !validation2.valid) {
+            return { intent: intent1, confidence: validation1.confidence };
+        }
+        
+        // Se ambas são válidas, usar estratégia de resolução
+        const resolution = this.conflictResolution.contextual(intent1, intent2, context);
+        
+        return {
+            intent: resolution,
+            confidence: Math.max(validation1.confidence, validation2.confidence),
+            resolutionStrategy: 'contextual'
+        };
+    }
+    
+    // Calcular score de contexto
+    calculateContextScore(intent, context) {
+        let score = 0;
+        
+        // Boost por histórico recente
+        if (context.conversationHistory) {
+            const recentIntents = context.conversationHistory
+                .slice(-3)
+                .map(entry => entry.intent);
+            
+            if (recentIntents.includes(intent)) {
+                score += 0.3;
+            }
+        }
+        
+        // Boost por padrões do usuário
+        if (context.userPatterns && context.userPatterns[intent]) {
+            score += context.userPatterns[intent] * 0.2;
+        }
+        
+        return score;
+    }
+    
+    // Obter prioridade da intenção
+    getIntentPriority(intent) {
+        const priorities = {
+            'GREETING': 10, // PRIORIDADE MÁXIMA para evitar conflitos
+            'PAY_FIXED_BILL': 5,
+            'ADD_EXPENSE': 4,
+            'ADD_INCOME': 4,
+            'PERFORM_TRANSFER': 3,
+            'QUERY_BALANCE': 2,
+            'QUERY_EXPENSES': 2,
+            'QUERY_INCOME': 2,
+            'QUERY_TRANSACTIONS': 2,
+            'ADD_FIXED_BILL': 1,
+            'QUERY_FIXED_BILLS': 1,
+            'ADD_DEBT': 1,
+            'QUERY_DEBTS': 1,
+            'REFUND_TRANSACTION': 1,
+            'UNKNOWN': -1
+        };
+        
+        return priorities[intent] || 0;
+    }
+}
+
+// ========================================
 // SISTEMA DE CONTEXTO INTELIGENTE
 // ========================================
 
@@ -620,35 +937,96 @@ class AdvancedEntityExtractor {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    // Extração de descrição inteligente
+    // Extração de descrição ULTRA-INTELIGENTE
     extractDescription(text, excludeWords = []) {
         let description = text.toLowerCase();
         
-        // Remover palavras relacionadas a dinheiro
-        const moneyWords = ['reais', 'real', 'contos', 'conto', 'r$', 'pila', 'dinheiro', 'valor', 'valor de'];
-        moneyWords.forEach(word => {
-            description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
-        });
-
-        // Remover palavras de ação
-        const actionWords = [
-            'gastei', 'paguei', 'foi', 'debitou', 'comprei', 'saquei', 'retirei', 
-            'recebi', 'ganhei', 'caiu', 'entrou', 'pingou', 'depositei', 'transferi', 'movi',
-            'paguei a', 'paguei o', 'paguei para', 'enviei para', 'mandei para'
+        // SISTEMA DE DETECÇÃO DE CONTEXTO INTELIGENTE
+        const contextPatterns = [
+            // Padrões com preposições (mais específicos)
+            { pattern: /(?:gastei|paguei|comprei|saquei|retirei)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(?:com|no|na|em|de|para|por)\s+(.+)/i, group: 1 },
+            { pattern: /(?:foi|debitou)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(?:com|no|na|em|de|para|por)\s+(.+)/i, group: 1 },
+            { pattern: /(?:comprei|paguei)\s+(.+?)\s+(?:por|a)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)/i, group: 1 },
+            
+            // Padrões diretos (mais específicos)
+            { pattern: /(?:gastei|paguei|comprei|saquei|retirei)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(.+)/i, group: 1 },
+            { pattern: /(?:foi|debitou)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(.+)/i, group: 1 },
+            
+            // Padrões com valores no final (mais específicos)
+            { pattern: /(?:comprei|paguei)\s+(.+?)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)/i, group: 1 },
+            
+            // Padrões específicos para transferências
+            { pattern: /(?:transferi|movi|mandei|enviei)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(?:de|do|da)\s+(.+?)\s+(?:para|pro)/i, group: 1 },
+            { pattern: /(?:transferi|movi|mandei|enviei)\s+[\d,]+\s*(?:reais?|contos?|pila|grana|r\$)\s+(?:para|pro)\s+(.+)/i, group: 1 },
+            
+            // Padrões específicos para casos como "comprei 1 real de copo"
+            { pattern: /(?:comprei|paguei)\s+[\d,]+\s*(?:real|reais?)\s+(?:de|do|da)\s+(.+)/i, group: 1 }
         ];
-        actionWords.forEach(word => {
-            description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
+        
+        // Tentar extrair usando padrões de contexto
+        for (let contextPattern of contextPatterns) {
+            const match = description.match(contextPattern.pattern);
+            if (match && match[contextPattern.group]) {
+                description = match[contextPattern.group].trim();
+                break;
+            }
+        }
+        
+        // SISTEMA DE LIMPEZA INTELIGENTE
+        const cleaningRules = [
+            // Remover palavras relacionadas a dinheiro (mais específicas)
+            { pattern: /\b(?:reais?|contos?|conto|r\$|pila|grana|dinheiro|valor|valor de|trocado|trocados)\b/gi, replacement: '' },
+            
+            // Remover palavras de ação (mais específicas)
+            { pattern: /\b(?:gastei|paguei|foi|debitou|comprei|saquei|retirei|recebi|ganhei|caiu|entrou|pingou|depositei|transferi|movi|mandei|enviei)\b/gi, replacement: '' },
+            
+            // Remover preposições desnecessárias
+            { pattern: /\b(?:com|no|na|em|de|para|por|do|da|dos|das|pelo|pela|pelos|pelas)\b/gi, replacement: '' },
+            
+            // Remover artigos
+            { pattern: /\b(?:o|a|os|as|um|uma|uns|umas)\b/gi, replacement: '' },
+            
+            // Remover palavras específicas do contexto
+            { pattern: /\b(?:nubank|itau|bradesco|caixa|santander|banco|conta|cartao|cartão|pix|ted|doc)\b/gi, replacement: '' },
+            
+            // Remover números isolados
+            { pattern: /\b\d+\b/g, replacement: '' },
+            
+            // Remover símbolos monetários
+            { pattern: /[R\$]/g, replacement: '' }
+        ];
+        
+        // Aplicar regras de limpeza
+        cleaningRules.forEach(rule => {
+            description = description.replace(rule.pattern, rule.replacement);
         });
-
-        // Remover palavras específicas
+        
+        // Remover palavras específicas do contexto
         excludeWords.forEach(word => {
             description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
         });
-
-        // Limpar e normalizar
-        description = description.trim().replace(/\s+/g, ' ');
         
-        return description.length >= 2 ? description : null;
+        // SISTEMA DE NORMALIZAÇÃO INTELIGENTE
+        description = description
+            .trim()                           // Remover espaços extras
+            .replace(/\s+/g, ' ')            // Normalizar espaços
+            .trim();                         // Limpar novamente
+        
+        // VALIDAÇÃO INTELIGENTE
+        if (description.length < 2) {
+            return null;
+        }
+        
+        // Filtrar descrições muito genéricas
+        const genericWords = ['coisa', 'item', 'produto', 'servico', 'serviço', 'compra', 'gasto', 'despesa'];
+        if (genericWords.some(word => description.includes(word))) {
+            return null;
+        }
+        
+        // Capitalizar primeira letra
+        description = description.charAt(0).toUpperCase() + description.slice(1);
+        
+        return description;
     }
 }
 
@@ -699,6 +1077,16 @@ class AdvancedIntentClassifier {
                     { word: 'o que voce faz', weight: 0.8 },
                     { word: 'quais são suas funções', weight: 0.8 },
                     { word: 'quais sao suas funcoes', weight: 0.8 },
+                    { word: 'quais são suas funcoes', weight: 0.8 },
+                    { word: 'quais sao suas funções', weight: 0.8 },
+                    { word: 'quais são sua funções', weight: 0.8 },
+                    { word: 'quais sao sua funcoes', weight: 0.8 },
+                    { word: 'quais são sua funcoes', weight: 0.8 },
+                    { word: 'quais sao sua funções', weight: 0.8 },
+                    { word: 'quais sao suas funcoes', weight: 0.8 },
+                    { word: 'quais são suas funcoes', weight: 0.8 },
+                    { word: 'quais sao suas funções', weight: 0.8 },
+                    { word: 'quais são suas funcoes', weight: 0.8 },
                     { word: 'me ajuda', weight: 0.7 },
                     { word: 'me ajuda aí', weight: 0.8 },
                     { word: 'me ajuda ai', weight: 0.8 },
@@ -716,7 +1104,23 @@ class AdvancedIntentClassifier {
                     { word: 'iniciar', weight: 0.6 },
                     { word: 'start', weight: 0.5 },
                     { word: 'hello', weight: 0.5 },
-                    { word: 'hi', weight: 0.5 }
+                    { word: 'hi', weight: 0.5 },
+                    { word: 'funcionalidades', weight: 0.7 },
+                    { word: 'recursos', weight: 0.6 },
+                    { word: 'capacidades', weight: 0.6 },
+                    { word: 'o que você pode fazer', weight: 0.8 },
+                    { word: 'o que voce pode fazer', weight: 0.8 },
+                    { word: 'o que você consegue fazer', weight: 0.8 },
+                    { word: 'o que voce consegue fazer', weight: 0.8 },
+                    { word: 'quantos anos', weight: 0.7 },
+                    { word: 'quantos', weight: 0.5 },
+                    { word: 'quanto', weight: 0.4 },
+                    { word: 'pergunta', weight: 0.6 },
+                    { word: 'dúvida', weight: 0.6 },
+                    { word: 'duvida', weight: 0.6 },
+                    { word: 'curiosidade', weight: 0.5 },
+                    { word: 'saber', weight: 0.4 },
+                    { word: 'conhecer', weight: 0.4 }
                 ],
                 patterns: [
                     /^(oi|olá|ola|e aí|eai|eae|salve|fala|bom dia|boa tarde|boa noite)/i,
@@ -724,6 +1128,11 @@ class AdvancedIntentClassifier {
                     /como\s+(você\s+)?funciona/i,
                     /como\s+(você\s+)?funciona\s+isso/i,
                     /o\s+que\s+(você\s+)?faz/i,
+                    /quais\s+s[ãa]o\s+suas?\s+fun[çc][õo]es/i,
+                    /quais\s+s[ãa]o\s+suas?\s+fun[çc][õo]es\?/i,
+                    /quais\s+s[ãa]o\s+suas?\s+fun[çc][õo]es\s*\?/i,
+                    /o\s+que\s+(você\s+)?pode\s+fazer/i,
+                    /o\s+que\s+(você\s+)?consegue\s+fazer/i,
                     /me\s+ajuda/i,
                     /pode\s+me\s+ajudar/i,
                     /posso\s+te\s+perguntar/i,
@@ -731,30 +1140,77 @@ class AdvancedIntentClassifier {
                     /como\s+usar/i,
                     /n[ãa]o\s+sei\s+como\s+usar/i,
                     /primeira\s+vez/i,
-                    /(começar|comecar|iniciar)/i
+                    /(começar|comecar|iniciar)/i,
+                    /funcionalidades/i,
+                    /recursos/i,
+                    /capacidades/i,
+                    /quantos\s+anos/i,
+                    /quantos\s+[a-z]+/i,
+                    /quanto\s+[a-z]+/i,
+                    /pergunta/i,
+                    /d[úu]vida/i,
+                    /curiosidade/i,
+                    /saber/i,
+                    /conhecer/i
                 ],
                 priority: 1,
                 handler: this.handleGreeting.bind(this)
             },
 
-            // INTENÇÕES DE DESPESAS
+            // INTENÇÕES DE DESPESAS - PALAVRAS-CHAVE ULTRA-EXPANDIDAS
             {
                 name: 'ADD_EXPENSE',
                 keywords: [
                     { word: 'gastei', weight: 0.9 },
-                    { word: 'paguei', weight: 0.6 }, // Reduzido para evitar conflito com contas fixas
-                    { word: 'foi', weight: 0.4 },
-                    { word: 'debitou', weight: 0.8 },
+                    { word: 'desembolsei', weight: 0.9 },
+                    { word: 'apliquei', weight: 0.8 },
+                    { word: 'investi', weight: 0.8 },
                     { word: 'comprei', weight: 0.7 },
-                    { word: 'despesa', weight: 0.6 },
-                    { word: 'gasto', weight: 0.6 },
                     { word: 'saquei', weight: 0.7 },
                     { word: 'retirei', weight: 0.7 },
                     { word: 'mandei', weight: 0.6 },
                     { word: 'enviei', weight: 0.6 },
-                    { word: 'paguei a', weight: 0.5 }, // Reduzido para evitar conflito
-                    { word: 'paguei o', weight: 0.5 }, // Reduzido para evitar conflito
-                    { word: 'paguei para', weight: 0.8 }
+                    { word: 'foi', weight: 0.4 },
+                    { word: 'debitou', weight: 0.8 },
+                    { word: 'despesa', weight: 0.6 },
+                    { word: 'gasto', weight: 0.6 },
+                    { word: 'paguei', weight: 0.3 }, // MUITO REDUZIDO para evitar conflito
+                    { word: 'paguei para', weight: 0.8 },
+                    { word: 'paguei no', weight: 0.7 },
+                    { word: 'paguei na', weight: 0.7 },
+                    { word: 'paguei em', weight: 0.7 },
+                    { word: 'paguei com', weight: 0.7 },
+                    // PALAVRAS-CHAVE BRASILEIRAS
+                    { word: 'gasolina', weight: 0.8 },
+                    { word: 'farmácia', weight: 0.8 },
+                    { word: 'farmacia', weight: 0.8 },
+                    { word: 'supermercado', weight: 0.8 },
+                    { word: 'mercado', weight: 0.8 },
+                    { word: 'ifood', weight: 0.8 },
+                    { word: 'rappi', weight: 0.8 },
+                    { word: 'uber', weight: 0.8 },
+                    { word: 'taxi', weight: 0.8 },
+                    { word: 'ônibus', weight: 0.7 },
+                    { word: 'onibus', weight: 0.7 },
+                    { word: 'metrô', weight: 0.7 },
+                    { word: 'metro', weight: 0.7 },
+                    { word: 'restaurante', weight: 0.7 },
+                    { word: 'delivery', weight: 0.7 },
+                    { word: 'lanchonete', weight: 0.7 },
+                    { word: 'padaria', weight: 0.7 },
+                    { word: 'açougue', weight: 0.7 },
+                    { word: 'acougue', weight: 0.7 },
+                    { word: 'hortifruti', weight: 0.7 },
+                    { word: 'posto', weight: 0.7 },
+                    { word: 'posto de gasolina', weight: 0.8 },
+                    { word: 'combustível', weight: 0.7 },
+                    { word: 'combustivel', weight: 0.7 },
+                    // EXPRESSÕES COLOQUIAIS
+                    { word: 'pila', weight: 0.6 },
+                    { word: 'contos', weight: 0.6 },
+                    { word: 'grana', weight: 0.6 },
+                    { word: 'um trocado', weight: 0.5 },
+                    { word: 'uns trocados', weight: 0.5 }
                 ],
                 patterns: [
                     /gastei\s+R?\$?\s*\d+/i,
@@ -883,21 +1339,54 @@ class AdvancedIntentClassifier {
                 handler: this.handlePayFixedBill.bind(this)
             },
 
-            // INTENÇÕES DE RECEITAS
+            // INTENÇÕES DE RECEITAS - PALAVRAS-CHAVE ULTRA-EXPANDIDAS
             {
                 name: 'ADD_INCOME',
                 keywords: [
+                    { word: 'recebi', weight: 0.9 },
                     { word: 'ganhei', weight: 0.8 },
                     { word: 'caiu', weight: 0.7 },
                     { word: 'entrou', weight: 0.7 },
                     { word: 'pingou', weight: 0.6 },
-                    { word: 'salário', weight: 0.8 },
-                    { word: 'receita', weight: 0.6 },
+                    { word: 'chegou', weight: 0.7 },
                     { word: 'depositei', weight: 0.7 },
                     { word: 'depósito', weight: 0.6 },
                     { word: 'deposito', weight: 0.6 },
                     { word: 'transferiram', weight: 0.7 },
-                    { word: 'me enviaram', weight: 0.7 }
+                    { word: 'me enviaram', weight: 0.7 },
+                    { word: 'me mandaram', weight: 0.7 },
+                    { word: 'salário', weight: 0.8 },
+                    { word: 'salario', weight: 0.8 },
+                    { word: 'receita', weight: 0.6 },
+                    { word: 'renda', weight: 0.6 },
+                    { word: 'provento', weight: 0.6 },
+                    { word: 'proventos', weight: 0.6 },
+                    { word: 'pagamento', weight: 0.6 },
+                    { word: 'pagamentos', weight: 0.6 },
+                    { word: 'bonus', weight: 0.6 },
+                    { word: 'bônus', weight: 0.6 },
+                    { word: 'comissão', weight: 0.6 },
+                    { word: 'comissao', weight: 0.6 },
+                    { word: 'freelance', weight: 0.6 },
+                    { word: 'freela', weight: 0.6 },
+                    { word: 'venda', weight: 0.6 },
+                    { word: 'vendas', weight: 0.6 },
+                    { word: 'lucro', weight: 0.6 },
+                    { word: 'lucros', weight: 0.6 },
+                    { word: 'dividendo', weight: 0.6 },
+                    { word: 'dividendos', weight: 0.6 },
+                    { word: 'juros', weight: 0.6 },
+                    { word: 'rendimento', weight: 0.6 },
+                    { word: 'rendimentos', weight: 0.6 },
+                    // EXPRESSÕES COLOQUIAIS
+                    { word: 'caiu na conta', weight: 0.8 },
+                    { word: 'entrou na conta', weight: 0.8 },
+                    { word: 'pingou na conta', weight: 0.7 },
+                    { word: 'chegou na conta', weight: 0.7 },
+                    { word: 'caiu no banco', weight: 0.7 },
+                    { word: 'entrou no banco', weight: 0.7 },
+                    { word: 'pingou no banco', weight: 0.6 },
+                    { word: 'chegou no banco', weight: 0.6 }
                 ],
                 patterns: [
                     /recebi\s+R?\$?\s*\d+/i,
@@ -914,24 +1403,48 @@ class AdvancedIntentClassifier {
                 handler: this.handleAddIncome.bind(this)
             },
 
-            // INTENÇÕES DE TRANSFERÊNCIA
+            // INTENÇÕES DE TRANSFERÊNCIA - PALAVRAS-CHAVE ULTRA-EXPANDIDAS
             {
                 name: 'PERFORM_TRANSFER',
                 keywords: [
                     { word: 'transferir', weight: 0.9 },
                     { word: 'transferi', weight: 0.9 },
-                    { word: 'transfira', weight: 0.9 }, // NOVO: imperativo
+                    { word: 'transfira', weight: 0.9 },
                     { word: 'mover', weight: 0.7 },
                     { word: 'movi', weight: 0.7 },
-                    { word: 'mova', weight: 0.7 }, // NOVO: imperativo
+                    { word: 'mova', weight: 0.7 },
+                    { word: 'movimentar', weight: 0.7 },
+                    { word: 'movimentei', weight: 0.7 },
+                    { word: 'movimenta', weight: 0.7 },
+                    { word: 'migrar', weight: 0.7 },
+                    { word: 'migrei', weight: 0.7 },
+                    { word: 'migra', weight: 0.7 },
+                    { word: 'passar', weight: 0.6 },
+                    { word: 'passei', weight: 0.6 },
+                    { word: 'passe', weight: 0.6 },
                     { word: 'enviar', weight: 0.6 },
+                    { word: 'mandei', weight: 0.6 },
+                    { word: 'manda', weight: 0.6 },
                     { word: 'mandar', weight: 0.6 },
-                    { word: 'transferi para', weight: 0.8 }, // NOVO: transferência para pessoa
+                    { word: 'transferi para', weight: 0.8 },
                     { word: 'de uma conta para outra', weight: 0.8 },
                     { word: 'entre contas', weight: 0.7 },
                     { word: 'do', weight: 0.5 },
                     { word: 'para', weight: 0.5 },
-                    { word: 'reais', weight: 0.3 }
+                    { word: 'reais', weight: 0.3 },
+                    { word: 'contos', weight: 0.3 },
+                    { word: 'pila', weight: 0.3 },
+                    { word: 'grana', weight: 0.3 },
+                    // EXPRESSÕES COLOQUIAIS
+                    { word: 'passou', weight: 0.6 },
+                    { word: 'passou de', weight: 0.7 },
+                    { word: 'passou para', weight: 0.7 },
+                    { word: 'mandou', weight: 0.6 },
+                    { word: 'mandou de', weight: 0.7 },
+                    { word: 'mandou para', weight: 0.7 },
+                    { word: 'enviou', weight: 0.6 },
+                    { word: 'enviou de', weight: 0.7 },
+                    { word: 'enviou para', weight: 0.7 }
                 ],
                 patterns: [
                     /transferir\s+R?\$?\s*[\d,]+\s+(?:reais?|de|do)/i,
@@ -1226,21 +1739,31 @@ class AdvancedIntentClassifier {
                     { word: 'contas em dia', weight: 0.7 },
                     { word: 'contas quitadas', weight: 0.7 },
                     { word: 'contas pagas', weight: 0.8 },
-                    { word: 'o que paguei', weight: 0.5 }, // Reduzido para evitar conflito
-                    { word: 'paguei este mês', weight: 0.5 }, // Reduzido para evitar conflito
-                    { word: 'paguei este mes', weight: 0.5 } // Reduzido para evitar conflito
+                    { word: 'paguei este mês', weight: 0.6 },
+                    { word: 'paguei este mes', weight: 0.6 },
+                    { word: 'quais contas paguei', weight: 0.8 },
+                    { word: 'contas que paguei', weight: 0.7 },
+                    { word: 'pagamentos feitos', weight: 0.6 },
+                    { word: 'pagamentos realizados', weight: 0.6 },
+                    { word: 'paguei alguma conta', weight: 0.9 },
+                    { word: 'paguei alguma conta?', weight: 0.9 },
+                    { word: 'alguma conta paguei', weight: 0.8 },
+                    { word: 'alguma conta eu paguei', weight: 0.8 }
                 ],
                 patterns: [
                     /quais\s+contas?\s+eu\s+paguei/i,
+                    /quais\s+contas?\s+paguei/i,
                     /contas?\s+pagas?\s+este\s+mês/i,
                     /contas?\s+pagas?\s+este\s+mes/i,
                     /o\s+que\s+(?:já|ja)\s+paguei/i,
                     /contas?\s+em\s+dia/i,
                     /contas?\s+quitadas/i,
-                    /contas?\s+pagas/i,
-                    /o\s+que\s+paguei/i,
+                    /contas?\s+que\s+paguei/i,
                     /paguei\s+este\s+mês/i,
-                    /paguei\s+este\s+mes/i
+                    /paguei\s+este\s+mes/i,
+                    /pagamentos?\s+(?:feitos|realizados)/i,
+                    /paguei\s+alguma\s+conta/i,
+                    /alguma\s+conta\s+(?:eu\s+)?paguei/i
                 ],
                 priority: 6,
                 handler: this.handleQueryPaidBills.bind(this)
@@ -1526,17 +2049,84 @@ class AdvancedIntentClassifier {
                 ],
                 priority: 1,
                 handler: this.handleAnalytics.bind(this)
+            },
+
+            // INTENÇÕES DE ANÁLISE COMPARATIVA MENSAL
+            {
+                name: 'MONTHLY_COMPARISON',
+                keywords: [
+                    { word: 'comparar', weight: 0.9 },
+                    { word: 'comparação', weight: 0.8 },
+                    { word: 'comparacao', weight: 0.8 },
+                    { word: 'mês passado', weight: 0.9 },
+                    { word: 'mes passado', weight: 0.9 },
+                    { word: 'mês anterior', weight: 0.8 },
+                    { word: 'mes anterior', weight: 0.8 },
+                    { word: 'diferença', weight: 0.7 },
+                    { word: 'diferenca', weight: 0.7 },
+                    { word: 'aumentou', weight: 0.7 },
+                    { word: 'diminuiu', weight: 0.7 },
+                    { word: 'cresceu', weight: 0.6 },
+                    { word: 'reduziu', weight: 0.6 }
+                ],
+                patterns: [
+                    /comparar\s+(?:com\s+)?(?:o\s+)?mês\s+passado/i,
+                    /comparar\s+(?:com\s+)?(?:o\s+)?mes\s+passado/i,
+                    /comparação\s+(?:com\s+)?(?:o\s+)?mês\s+passado/i,
+                    /comparacao\s+(?:com\s+)?(?:o\s+)?mes\s+passado/i,
+                    /diferença\s+(?:do\s+)?mês\s+passado/i,
+                    /diferenca\s+(?:do\s+)?mes\s+passado/i,
+                    /quanto\s+(?:aumentou|diminuiu|cresceu|reduziu)\s+(?:em\s+relação\s+ao\s+)?mês\s+passado/i,
+                    /quanto\s+(?:aumentou|diminuiu|cresceu|reduziu)\s+(?:em\s+relacao\s+ao\s+)?mes\s+passado/i
+                ],
+                priority: 4,
+                handler: this.handleMonthlyComparison.bind(this)
+            },
+
+            // INTENÇÕES DE SUGESTÕES DE ECONOMIA
+            {
+                name: 'SAVINGS_SUGGESTIONS',
+                keywords: [
+                    { word: 'sugestão', weight: 0.8 },
+                    { word: 'sugestao', weight: 0.8 },
+                    { word: 'economia', weight: 0.9 },
+                    { word: 'economizar', weight: 0.8 },
+                    { word: 'poupar', weight: 0.8 },
+                    { word: 'guardar', weight: 0.7 },
+                    { word: 'reduzir', weight: 0.7 },
+                    { word: 'cortar', weight: 0.6 },
+                    { word: 'dica', weight: 0.6 },
+                    { word: 'dicas', weight: 0.6 },
+                    { word: 'como economizar', weight: 0.9 },
+                    { word: 'onde cortar', weight: 0.7 },
+                    { word: 'onde reduzir', weight: 0.7 }
+                ],
+                patterns: [
+                    /sugestão\s+(?:de\s+)?economia/i,
+                    /sugestao\s+(?:de\s+)?economia/i,
+                    /como\s+economizar/i,
+                    /onde\s+(?:cortar|reduzir)/i,
+                    /dicas?\s+(?:de\s+)?economia/i,
+                    /como\s+poupar/i,
+                    /onde\s+guardar/i,
+                    /reduzir\s+gastos/i,
+                    /cortar\s+gastos/i
+                ],
+                priority: 4,
+                handler: this.handleSavingsSuggestions.bind(this)
             }
         ];
     }
 
-    // Método principal de classificação
+    // Método principal de classificação com sistema anti-conflito ULTRA-RIGOROSO
     classify(text, context) {
         const textLower = text.toLowerCase();
         let bestIntent = null;
         let bestScore = 0;
         let debugScores = [];
+        let conflictPrevention = new ConflictPreventionSystem();
 
+        // PRIMEIRA CAMADA: Calcular scores de todas as intenções
         for (let intent of this.intentions) {
             let score = this.calculateIntentScore(textLower, intent, context);
             debugScores.push({ name: intent.name, score: score });
@@ -1547,8 +2137,58 @@ class AdvancedIntentClassifier {
             }
         }
 
+        // SEGUNDA CAMADA: Aplicar sistema anti-conflito ULTRA-RIGOROSO
+        const topIntents = debugScores
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3) // Top 3 intenções
+            .filter(intent => intent.score > 0.1); // Filtrar scores muito baixos
 
-        // Verificar se a confiança é suficiente
+        if (topIntents.length >= 2) {
+            // Verificar se há conflito entre as top intenções
+            const intent1 = topIntents[0];
+            const intent2 = topIntents[1];
+            
+            // Se a diferença de score for menor que 0.2, aplicar resolução de conflito
+            if (Math.abs(intent1.score - intent2.score) < 0.2) {
+                console.log('🛡️ CONFLITO DETECTADO:', intent1.name, 'vs', intent2.name);
+                
+                const resolution = conflictPrevention.resolveConflict(
+                    intent1.name, 
+                    intent2.name, 
+                    text, 
+                    context
+                );
+                
+                // Encontrar a intenção resolvida
+                bestIntent = this.intentions.find(i => i.name === resolution.intent);
+                bestScore = resolution.confidence;
+                
+                console.log(`🛡️ CONFLITO RESOLVIDO: ${intent1.name} vs ${intent2.name} -> ${resolution.intent} (confiança: ${resolution.confidence})`);
+            }
+        }
+
+        // TERCEIRA CAMADA: Validação final com padrões de exclusão
+        if (bestIntent) {
+            const validation = conflictPrevention.validateIntent(bestIntent.name, text, context);
+            
+            if (!validation.valid) {
+                console.log(`❌ INTENÇÃO INVALIDA: ${bestIntent.name} (confiança: ${validation.confidence})`);
+                
+                // Tentar segunda melhor intenção
+                if (topIntents.length >= 2) {
+                    const secondIntent = this.intentions.find(i => i.name === topIntents[1].name);
+                    const secondValidation = conflictPrevention.validateIntent(secondIntent.name, text, context);
+                    
+                    if (secondValidation.valid) {
+                        bestIntent = secondIntent;
+                        bestScore = secondValidation.confidence;
+                        console.log(`✅ SEGUNDA INTENÇÃO VÁLIDA: ${secondIntent.name} (confiança: ${secondValidation.confidence})`);
+                    }
+                }
+            }
+        }
+
+        // QUARTA CAMADA: Verificar se a confiança é suficiente
         if (bestScore < this.confidenceThreshold) {
             return {
                 intent: this.fallbackIntent,
@@ -1556,6 +2196,9 @@ class AdvancedIntentClassifier {
                 handler: this.handleUnknown.bind(this)
             };
         }
+
+        // Debug: mostrar scores de todas as intenções
+        console.log('🔍 Debug - Scores de intenções:', debugScores.sort((a, b) => b.score - a.score));
 
         return {
             intent: bestIntent.name,
@@ -1861,11 +2504,22 @@ class AdvancedIntentClassifier {
         return contextScore;
     }
 
+    // Método para normalizar texto e melhorar reconhecimento
+    normalizeText(text) {
+        return text
+            .replace(/[^\w\s]/g, ' ') // Remove pontuação
+            .replace(/\s+/g, ' ') // Remove espaços extras
+            .trim()
+            .toLowerCase();
+    }
+
     // Handlers de intenções
     handleGreeting(text, user, accounts, fixedBills, context) {
         context.sessionData.lastIntent = 'GREETING';
         
-        const textLower = text.toLowerCase();
+        // Normalizar texto para melhor reconhecimento
+        const normalizedText = this.normalizeText(text);
+        const textLower = normalizedText.toLowerCase();
         
         // Saudação personalizada baseada na hora do dia
         const hour = new Date().getHours();
@@ -1881,7 +2535,55 @@ class AdvancedIntentClassifier {
         
         // Respostas concisas baseadas na saudação
         let message = '';
-        if (textLower.includes('oi') || textLower.includes('olá') || textLower.includes('ola')) {
+        
+        // Detectar perguntas sobre funcionalidades usando texto normalizado
+        const isFunctionQuestion = textLower.includes('funcoes') || 
+                                  textLower.includes('funcionalidades') || 
+                                  textLower.includes('recursos') || 
+                                  textLower.includes('capacidades') || 
+                                  textLower.includes('o que voce pode fazer') ||
+                                  textLower.includes('o que voce consegue fazer') ||
+                                  (textLower.includes('quais') && textLower.includes('funcoes')) ||
+                                  (textLower.includes('quais') && textLower.includes('sua')) ||
+                                  (textLower.includes('quais') && textLower.includes('suas'));
+        
+        if (isFunctionQuestion) {
+            
+            message = `${greeting} Sou o Dinah, seu assistente financeiro inteligente! 🤖\n\n` +
+                     `**💡 Minhas principais funcionalidades:**\n\n` +
+                     `**💸 Registrar Despesas:** "Gastei 50 reais com gasolina"\n` +
+                     `**💰 Registrar Receitas:** "Recebi 1000 reais"\n` +
+                     `**📋 Pagar Contas Fixas:** "Paguei o aluguel"\n` +
+                     `**🔄 Transferências:** "Transferi 100 reais do Nubank para Itaú"\n` +
+                     `**📊 Consultas:** "Qual meu saldo?", "Quais contas não paguei?"\n` +
+                     `**📈 Análises:** "Análise dos meus gastos", "Comparação com mês passado"\n` +
+                     `**💡 Sugestões:** "Sugestões de economia"\n` +
+                     `**💳 Dívidas:** "Estou devendo 50 reais para farmácia"\n\n` +
+                     `**🎯 Posso entender linguagem natural e fazer análises inteligentes!**\n\n` +
+                     `Clique no botão "Ajuda" no topo para ver todos os exemplos! 😊`;
+                     
+        } else if (textLower.includes('quantos anos') || textLower.includes('quantos') || 
+                   textLower.includes('quanto') || textLower.includes('pergunta') || 
+                   textLower.includes('duvida') || textLower.includes('curiosidade') || 
+                   textLower.includes('saber') || textLower.includes('conhecer') ||
+                   (textLower.includes('quantos') && textLower.includes('tenho')) ||
+                   (textLower.includes('quanto') && textLower.includes('tenho'))) {
+            
+            message = `${greeting} Sou o Dinah, seu assistente financeiro! 🤖\n\n` +
+                     `**💡 Posso ajudar você com:**\n` +
+                     `• Organizar suas finanças\n` +
+                     `• Registrar gastos e receitas\n` +
+                     `• Controlar contas fixas\n` +
+                     `• Fazer transferências\n` +
+                     `• Análises financeiras\n` +
+                     `• Sugestões de economia\n\n` +
+                     `**🎯 Exemplos de comandos:**\n` +
+                     `• "Gastei 50 reais com gasolina"\n` +
+                     `• "Qual meu saldo?"\n` +
+                     `• "Análise dos meus gastos"\n\n` +
+                     `Como posso ajudar você hoje? 😊`;
+                     
+        } else if (textLower.includes('oi') || textLower.includes('olá') || textLower.includes('ola')) {
             const responses = [
                 `${greeting} Oi! Como posso ajudar? 😊`,
                 `${greeting} Olá! Pronto para organizar suas finanças? 💰`,
@@ -2199,11 +2901,16 @@ class AdvancedIntentClassifier {
                 category
             }, 2);
             
-            const accountOptions = accounts.map(acc => acc.name).join(', ');
             return {
                 type: 'clarification',
                 payload: {
-                    message: `Em qual conta você quer creditar R$ ${(amount || 0).toFixed(2)}? 🏦\n\nSuas contas: ${accountOptions}\n\n**Exemplo:** "nubank"`
+                    message: `Em qual conta você quer creditar R$ ${(amount || 0).toFixed(2)}? 🏦\n\n**Escolha uma conta:**`,
+                    buttons: accounts.map(acc => ({
+                        text: `${acc.name} - R$ ${(acc.balance || 0).toFixed(2)}`,
+                        value: acc.name,
+                        disabled: false,
+                        style: 'success'
+                    }))
                 }
             };
         }
@@ -2742,6 +3449,38 @@ class AdvancedIntentClassifier {
                 data: {
                     type: 'spending_analysis',
                     period: 'month'
+                }
+            }
+        };
+    }
+
+    // Handler para análise comparativa mensal
+    handleMonthlyComparison(text, user, accounts, fixedBills, context) {
+        context.sessionData.lastIntent = 'MONTHLY_COMPARISON';
+        
+        return {
+            type: 'action',
+            payload: {
+                action: 'MONTHLY_COMPARISON',
+                data: {
+                    type: 'monthly_comparison',
+                    userId: user.uid
+                }
+            }
+        };
+    }
+
+    // Handler para sugestões de economia
+    handleSavingsSuggestions(text, user, accounts, fixedBills, context) {
+        context.sessionData.lastIntent = 'SAVINGS_SUGGESTIONS';
+        
+        return {
+            type: 'action',
+            payload: {
+                action: 'SAVINGS_SUGGESTIONS',
+                data: {
+                    type: 'savings_suggestions',
+                    userId: user.uid
                 }
             }
         };
