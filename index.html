@@ -51,6 +51,12 @@
                 <span class="text-sm text-gray-400">Assistente Financeiro</span>
             </div>
             <div class="flex items-center space-x-3">
+                <button id="help-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200 flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Ajuda</span>
+                </button>
                 <button id="manage-accounts-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200">
                     Gerenciar Contas
                 </button>
@@ -702,6 +708,336 @@
                         <button id="error-ok-btn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition duration-200">
                             OK
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ajuda -->
+    <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h2 class="text-2xl font-bold text-blue-400">🤖 Comandos do Dinah</h2>
+                <button id="close-help-modal" class="text-gray-400 hover:text-white transition duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- Despesas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-red-400 mb-3">💸 Registrar Despesas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Gastei 50 reais com gasolina"</li>
+                                <li>"Comprei 1 real de copo"</li>
+                                <li>"Paguei 20 reais no mercado"</li>
+                                <li>"Desembolsei 15 reais"</li>
+                                <li>"Saqueei 100 reais"</li>
+                                <li>"Retirei 30 reais"</li>
+                                <li>"Debitou 25 reais"</li>
+                                <li>"Paguei para uber 15 reais"</li>
+                                <li>"Paguei no ifood 40 reais"</li>
+                                <li>"Paguei na farmácia 20 reais"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Receitas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-400 mb-3">💰 Registrar Receitas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Recebi 1000 reais"</li>
+                                <li>"Ganhei 500 reais"</li>
+                                <li>"Caiu 200 reais na conta"</li>
+                                <li>"Entrou 1500 reais"</li>
+                                <li>"Depositei 300 reais"</li>
+                                <li>"Salário de 2000 reais"</li>
+                                <li>"Transferiram 100 reais"</li>
+                                <li>"Chegou 400 reais"</li>
+                                <li>"Pingou 50 reais"</li>
+                                <li>"Me enviaram 200 reais"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Contas Fixas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-yellow-400 mb-3">📋 Pagar Contas Fixas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Paguei o aluguel"</li>
+                                <li>"Quitei a energia"</li>
+                                <li>"Paguei a internet"</li>
+                                <li>"Quitei o cartão"</li>
+                                <li>"Paguei a academia"</li>
+                                <li>"Acabei de pagar o aluguel"</li>
+                                <li>"Paguei hoje a energia"</li>
+                                <li>"Paguei agora a internet"</li>
+                                <li>"Quitei o streaming"</li>
+                                <li>"Paguei o seguro"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Transferências -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-400 mb-3">🔄 Transferências</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Transferi 100 reais do Nubank para Itaú"</li>
+                                <li>"Movi 50 reais do Bradesco para Caixa"</li>
+                                <li>"Transfira 200 reais do Santander para Nubank"</li>
+                                <li>"Mandei 150 reais do Itaú para Bradesco"</li>
+                                <li>"Movimentei 300 reais"</li>
+                                <li>"Migrei 100 reais"</li>
+                                <li>"Passei 50 reais"</li>
+                                <li>"Enviei 200 reais"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Consultas de Saldo -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-blue-400 mb-3">💰 Consultar Saldos</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Qual meu saldo?"</li>
+                                <li>"Quanto tenho no Nubank?"</li>
+                                <li>"Saldo do Itaú"</li>
+                                <li>"Quanto tem no Bradesco?"</li>
+                                <li>"Meu saldo total"</li>
+                                <li>"Saldo de todas as contas"</li>
+                                <li>"Quanto tenho disponível?"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Resumos e Relatórios -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-3">📊 Resumos e Relatórios</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Resumo do mês"</li>
+                                <li>"Relatório mensal"</li>
+                                <li>"Gastos do mês"</li>
+                                <li>"Receitas do mês"</li>
+                                <li>"Quanto gastei total?"</li>
+                                <li>"Quanto recebi total?"</li>
+                                <li>"Balanço do mês"</li>
+                                <li>"Extrato mensal"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Consultas Diárias -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-3">📅 Consultas Diárias</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Quanto gastei hoje?"</li>
+                                <li>"Quanto gastei ontem?"</li>
+                                <li>"Gastos de hoje"</li>
+                                <li>"Gastos de ontem"</li>
+                                <li>"Quanto recebi hoje?"</li>
+                                <li>"Receitas de hoje"</li>
+                                <li>"Quantas transferências fiz hoje?"</li>
+                                <li>"Transferências de ontem"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Contas Fixas - Consultas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-orange-400 mb-3">📋 Consultar Contas Fixas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Quais contas não paguei?"</li>
+                                <li>"Não paguei ainda"</li>
+                                <li>"Esqueci de pagar"</li>
+                                <li>"Contas em atraso"</li>
+                                <li>"Quais contas eu paguei?"</li>
+                                <li>"Contas pagas este mês"</li>
+                                <li>"O que já paguei?"</li>
+                                <li>"Contas em dia"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Dívidas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-pink-400 mb-3">💳 Dívidas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Registrar:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Estou devendo 50 reais para farmácia"</li>
+                                <li>"Devo 100 reais para amigo"</li>
+                                <li>"Fiquei devendo 200 reais"</li>
+                                <li>"Peguei emprestado 300 reais"</li>
+                            </ul>
+                            <p class="text-gray-300 mt-2"><strong>Consultar:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Minhas dívidas"</li>
+                                <li>"Quanto devo?"</li>
+                                <li>"Quem eu devo?"</li>
+                                <li>"O que devo?"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Análises Avançadas -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-emerald-400 mb-3">📈 Análises Avançadas</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Análise dos meus gastos"</li>
+                                <li>"Insights financeiros"</li>
+                                <li>"Tendências dos gastos"</li>
+                                <li>"Padrões de gastos"</li>
+                                <li>"Gastos recorrentes"</li>
+                                <li>"Comportamento financeiro"</li>
+                                <li>"Onde mais gasto?"</li>
+                                <li>"Categoria que mais gasto"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Comparação Mensal -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-violet-400 mb-3">📊 Comparação Mensal</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Comparação com mês passado"</li>
+                                <li>"Mês passado"</li>
+                                <li>"Diferença do mês anterior"</li>
+                                <li>"Quanto aumentou?"</li>
+                                <li>"Quanto diminuiu?"</li>
+                                <li>"Comparar gastos"</li>
+                                <li>"Evolução dos gastos"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Sugestões de Economia -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-teal-400 mb-3">💡 Sugestões de Economia</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Sugestões de economia"</li>
+                                <li>"Como economizar?"</li>
+                                <li>"Dicas para poupar"</li>
+                                <li>"Onde guardar dinheiro?"</li>
+                                <li>"Reduzir gastos"</li>
+                                <li>"Cortar gastos"</li>
+                                <li>"Dicas financeiras"</li>
+                                <li>"Como poupar mais?"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Saudações e Ajuda -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-sky-400 mb-3">👋 Saudações e Ajuda</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-300"><strong>Exemplos:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                                <li>"Oi Dinah"</li>
+                                <li>"Olá"</li>
+                                <li>"E aí?"</li>
+                                <li>"Salve"</li>
+                                <li>"Como funciona?"</li>
+                                <li>"Me ajuda"</li>
+                                <li>"O que você faz?"</li>
+                                <li>"Quais são suas funções?"</li>
+                                <li>"Bom dia"</li>
+                                <li>"Boa tarde"</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Dicas -->
+                <div class="mt-6 bg-blue-900 bg-opacity-30 rounded-lg p-4 border border-blue-700">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-3">💡 Dicas Importantes</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-300">
+                        <li>Você pode falar de forma natural, o Dinah entende várias formas de expressar a mesma coisa</li>
+                        <li>Use valores com "reais", "real", "pila", "contos" ou apenas números</li>
+                        <li>Mencione o nome da conta quando necessário (Nubank, Itaú, Bradesco, etc.)</li>
+                        <li>Para contas fixas, use "paguei o" ou "quitei a" + nome da conta</li>
+                        <li>Para transferências, use "transferi X reais de Y para Z"</li>
+                        <li>O Dinah lembra do contexto da conversa e pode fazer perguntas de esclarecimento</li>
+                    </ul>
+                </div>
+
+                <!-- Comandos com Datas -->
+                <div class="mt-6 bg-green-900 bg-opacity-30 rounded-lg p-4 border border-green-700">
+                    <h3 class="text-lg font-semibold text-green-400 mb-3">📅 Comandos com Datas Específicas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-md font-semibold text-green-300 mb-2">💸 Despesas com Data:</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                <li>"Paguei 100 reais do aluguel ontem"</li>
+                                <li>"Gastei 50 reais na farmácia segunda-feira"</li>
+                                <li>"Comprei 30 reais de comida na terça"</li>
+                                <li>"Paguei 200 reais da energia no dia 5"</li>
+                                <li>"Gastei 15 reais com uber na sexta"</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-semibold text-green-300 mb-2">💰 Receitas com Data:</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                <li>"Recebi 1000 reais ontem"</li>
+                                <li>"Ganhei 500 reais segunda-feira"</li>
+                                <li>"Caiu 200 reais na conta na terça"</li>
+                                <li>"Salário de 2000 reais no dia 5"</li>
+                                <li>"Transferiram 100 reais na sexta"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comandos Avançados -->
+                <div class="mt-6 bg-purple-900 bg-opacity-30 rounded-lg p-4 border border-purple-700">
+                    <h3 class="text-lg font-semibold text-purple-400 mb-3">🚀 Comandos Avançados</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-md font-semibold text-purple-300 mb-2">🔍 Consultas Específicas:</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                <li>"Quanto gastei com gasolina este mês?"</li>
+                                <li>"Quanto recebi de salário?"</li>
+                                <li>"Quantas vezes paguei o aluguel?"</li>
+                                <li>"Qual conta tem mais dinheiro?"</li>
+                                <li>"Qual conta tem menos dinheiro?"</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-semibold text-purple-300 mb-2">📊 Análises Detalhadas:</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                <li>"Mostra meus gastos por categoria"</li>
+                                <li>"Onde mais gasto dinheiro?"</li>
+                                <li>"Qual minha maior despesa?"</li>
+                                <li>"Quanto economizo por mês?"</li>
+                                <li>"Previsão de gastos do próximo mês"</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
