@@ -1070,7 +1070,7 @@ export async function checkAndExpandPeriods(billId) {
 // ========================================
 
 // Função para pagar uma conta fixa (completa ou parcial) com controle de períodos mensais
-export async function payFixedBill(billId, paymentAmount, accountId, isFullPayment = false, targetPeriod = null) {
+export async function payFixedBill(billId, paymentAmount, accountId, isFullPayment = false, targetPeriod = null, isRemainingPayment = false) {
     const user = auth.currentUser;
     if (!user) throw new Error('Usuário não autenticado');
     
@@ -1157,6 +1157,12 @@ export async function payFixedBill(billId, paymentAmount, accountId, isFullPayme
         
         const remainingAmount = billData.amount - totalPaidThisPeriod;
         
+        // 🧠 SISTEMA INTELIGENTE: Ajustar valor para pagamento restante
+        if (isRemainingPayment) {
+            paymentAmount = remainingAmount; // Usar valor restante real
+            isFullPayment = true; // Pagamento restante é sempre completo
+        }
+        
         // Validações
         if (remainingAmount <= 0) {
             throw new Error(`Esta conta já foi paga completamente para o período ${paymentPeriod}`);
@@ -1186,7 +1192,7 @@ export async function payFixedBill(billId, paymentAmount, accountId, isFullPayme
                 accountId: accountId,
                 accountName: accountData.name,
                 amount: paymentAmount,
-                description: `${isFullPayment ? 'Pagamento completo' : 'Pagamento parcial'} da conta fixa: ${billData.description} (${paymentPeriod})`,
+                description: `${isRemainingPayment ? 'Pagamento restante' : (isFullPayment ? 'Pagamento completo' : 'Pagamento parcial')} da conta fixa: ${billData.description} (${paymentPeriod})`,
                 type: 'expense',
                 category: billData.category || 'outros',
                 date: serverTimestamp(),
