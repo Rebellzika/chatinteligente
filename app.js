@@ -824,6 +824,33 @@ async function executeAction(payload) {
                 addChatMessage('assistant', message);
                 break;
                 
+            case 'PAY_FIXED_BILL_CHAT':
+                // Usar a função específica para pagamento de contas fixas
+                const result = await payFixedBill(
+                    payload.data.billId,
+                    payload.data.paymentAmount,
+                    payload.data.accountId,
+                    payload.data.isFullPayment
+                );
+                
+                const billAccount = accounts.find(acc => acc.id === payload.data.accountId);
+                const billEmoji = '💸';
+                const paymentType = payload.data.isFullPayment ? 'completo' : 'parcial';
+                
+                let billMessage = `${billEmoji} **Gasto registrado com sucesso!**\n\n` +
+                    `💰 **Valor:** R$ ${payload.data.paymentAmount.toFixed(2)}\n` +
+                    `📝 **Descrição:** ${payload.data.billDescription} (pagamento ${paymentType})\n` +
+                    `🏦 **Conta:** ${billAccount?.name || 'N/A'}\n` +
+                    `📅 **Data:** ${new Date().toLocaleDateString('pt-BR')}`;
+                
+                // Adicionar informação sobre pagamento parcial
+                if (!payload.data.isFullPayment && payload.data.remainingAmount > 0) {
+                    billMessage += `\n\n⚠️ **Pagamento parcial:** Ainda restam R$ ${payload.data.remainingAmount.toFixed(2)} para pagar.`;
+                }
+                
+                addChatMessage('assistant', billMessage);
+                break;
+                
             case 'PERFORM_TRANSFER':
                 await performTransfer(payload.data.fromAccountId, payload.data.toAccountId, payload.data.amount);
                 const fromAccount = accounts.find(acc => acc.id === payload.data.fromAccountId);
