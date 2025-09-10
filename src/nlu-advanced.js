@@ -583,6 +583,11 @@ class AdvancedEntityExtractor {
         return 'outros';
     }
 
+    // Função para escapar caracteres especiais de regex
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     // Extração de descrição inteligente
     extractDescription(text, excludeWords = []) {
         let description = text.toLowerCase();
@@ -590,7 +595,7 @@ class AdvancedEntityExtractor {
         // Remover palavras relacionadas a dinheiro
         const moneyWords = ['reais', 'real', 'contos', 'conto', 'r$', 'pila', 'dinheiro', 'valor', 'valor de'];
         moneyWords.forEach(word => {
-            description = description.replace(new RegExp(word, 'gi'), '');
+            description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
         });
 
         // Remover palavras de ação
@@ -600,12 +605,12 @@ class AdvancedEntityExtractor {
             'paguei a', 'paguei o', 'paguei para', 'enviei para', 'mandei para'
         ];
         actionWords.forEach(word => {
-            description = description.replace(new RegExp(word, 'gi'), '');
+            description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
         });
 
         // Remover palavras específicas
         excludeWords.forEach(word => {
-            description = description.replace(new RegExp(word, 'gi'), '');
+            description = description.replace(new RegExp(this.escapeRegex(word), 'gi'), '');
         });
 
         // Limpar e normalizar
