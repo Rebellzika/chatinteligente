@@ -2932,24 +2932,18 @@ class PendingQuestionProcessor {
             
             const isPartialPayment = data.isPartialPayment || false;
             const remainingAmount = data.remainingAmount || 0;
-            const description = isPartialPayment ? 
-                `${data.description} (pagamento parcial)` : 
-                data.description;
             
             return {
                 type: 'action',
                 payload: {
-                    action: 'ADD_TRANSACTION',
+                    action: 'PAY_FIXED_BILL_CHAT',
                     data: {
-                        accountId: billAccount.id || '',
-                        amount: data.amount || 0,
-                        description: description,
-                        type: 'expense',
-                        category: 'contas_fixas',
-                        date: new Date(),
-                        isPartialPayment: isPartialPayment,
                         billId: data.billId,
-                        remainingAmount: remainingAmount
+                        paymentAmount: data.amount || 0,
+                        accountId: billAccount.id || '',
+                        isFullPayment: !isPartialPayment,
+                        remainingAmount: remainingAmount,
+                        billDescription: data.description
                     }
                 }
             };
