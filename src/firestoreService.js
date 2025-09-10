@@ -1340,8 +1340,20 @@ export async function getFixedBillStatus(billId) {
         const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
         
-        // Calcular período atual baseado na data inicial
-        const currentPeriod = getPeriodFromDate(today);
+        // 🧠 CORREÇÃO: Calcular período atual baseado na data inicial da conta
+        // Se a conta foi criada em período anterior, considerar o período de criação como "atual"
+        const initialPeriod = getPeriodFromDate(initialDate);
+        const todayPeriod = getPeriodFromDate(today);
+        
+        // Determinar qual período deve ser considerado como "atual" para esta conta
+        let currentPeriod;
+        if (initialPeriod >= todayPeriod) {
+            // Conta criada no futuro ou hoje - usar período de hoje
+            currentPeriod = todayPeriod;
+        } else {
+            // Conta criada no passado - usar período de hoje (não o período inicial)
+            currentPeriod = todayPeriod;
+        }
         
         // OTIMIZAÇÃO: Processamento no servidor - buscar pagamentos e calcular último período pago
         const paymentsByPeriod = await getBillPaymentsOptimized(billId, 100);
@@ -1415,9 +1427,16 @@ export async function getFixedBillStatus(billId) {
             statusClass = 'text-orange-500';
             canPay = true;
         } else if (daysUntilDue <= 7 && daysUntilDue > 0) {
-            status = 'due-soon';
-            statusText = 'Quase Vencendo';
-            statusClass = 'text-orange-400';
+            // 🧠 CORREÇÃO: Se não há pagamentos ainda, não é "quase vencendo", é "pendente"
+            if (totalPaidThisPeriod === 0 && !hasPartialPaymentInCurrentPeriod) {
+                status = 'pending';
+                statusText = 'Pendente';
+                statusClass = 'text-blue-400';
+            } else {
+                status = 'due-soon';
+                statusText = 'Quase Vencendo';
+                statusClass = 'text-orange-400';
+            }
             canPay = true;
         }
         
