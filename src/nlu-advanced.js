@@ -478,6 +478,38 @@ class AdvancedEntityExtractor {
         return null;
     }
 
+    // Detecção inteligente de pagamento restante
+    detectRemainingPayment(text) {
+        const textLower = text.toLowerCase();
+        
+        // Padrões para pagamento restante/completo
+        const remainingPatterns = [
+            /pagar\s+(?:o\s+)?restante\s+(?:do|da)\s+(.+)/i,
+            /pagar\s+(?:o\s+)?que\s+falta\s+(?:do|da)\s+(.+)/i,
+            /pagar\s+(?:o\s+)?que\s+resta\s+(?:do|da)\s+(.+)/i,
+            /pagar\s+(?:o\s+)?saldo\s+(?:do|da)\s+(.+)/i,
+            /pagar\s+(?:o\s+)?completo\s+(?:do|da)\s+(.+)/i,
+            /pagar\s+(?:o\s+)?total\s+(?:do|da)\s+(.+)/i,
+            /quitei\s+(?:o\s+)?restante\s+(?:do|da)\s+(.+)/i,
+            /quitei\s+(?:o\s+)?que\s+falta\s+(?:do|da)\s+(.+)/i,
+            /quitei\s+(?:o\s+)?completo\s+(?:do|da)\s+(.+)/i,
+            /finalizar\s+(?:o\s+)?pagamento\s+(?:do|da)\s+(.+)/i,
+            /completar\s+(?:o\s+)?pagamento\s+(?:do|da)\s+(.+)/i
+        ];
+        
+        for (const pattern of remainingPatterns) {
+            const match = textLower.match(pattern);
+            if (match) {
+                return {
+                    isRemainingPayment: true,
+                    billName: match[1].trim()
+                };
+            }
+        }
+        
+        return { isRemainingPayment: false };
+    }
+
     // Extração de conta fixa inteligente
     extractFixedBill(text, fixedBills) {
         // Validação robusta de entrada
@@ -1984,12 +2016,31 @@ class AdvancedIntentClassifier {
     handlePayFixedBill(text, user, accounts, fixedBills, context) {
         context.sessionData.lastIntent = 'PAY_FIXED_BILL';
         
-        
         const entityExtractor = new AdvancedEntityExtractor();
-        const bill = entityExtractor.extractFixedBill(text, fixedBills);
-        const account = entityExtractor.extractAccount(text, accounts);
-        const amount = entityExtractor.extractMoney(text);
         
+        // 🧠 SISTEMA INTELIGENTE: Detectar pagamento restante
+        const remainingPayment = entityExtractor.detectRemainingPayment(text);
+        let bill, amount, isRemainingPayment = false;
+        
+        if (remainingPayment.isRemainingPayment) {
+            // Buscar conta fixa pelo nome extraído
+            bill = fixedBills.find(b => 
+                (b.description || b.name).toLowerCase().includes(remainingPayment.billName.toLowerCase()) ||
+                remainingPayment.billName.toLowerCase().includes((b.description || b.name).toLowerCase())
+            );
+            
+            if (bill) {
+                isRemainingPayment = true;
+                // Para pagamento restante, não especificar valor - será calculado automaticamente
+                amount = null;
+            }
+        } else {
+            // Processamento normal
+            bill = entityExtractor.extractFixedBill(text, fixedBills);
+            amount = entityExtractor.extractMoney(text);
+        }
+        
+        const account = entityExtractor.extractAccount(text, accounts);
         
         if (!bill) {
             // Lista mais amigável das contas fixas disponíveis
@@ -2004,6 +2055,7 @@ class AdvancedIntentClassifier {
                              '**💡 Dicas para pagar contas:**\n' +
                              '• "Paguei o aluguel" (pagamento completo)\n' +
                              '• "Paguei 100 reais do aluguel" (pagamento parcial)\n' +
+                             '• "Pagar restante do aluguel" (pagamento restante)\n' +
                              '• "Paguei a energia com nubank"\n' +
                              '• "Quitei a fatura do cartão"\n' +
                              '• "Paguei a prestação da casa"'
@@ -2011,9 +2063,19 @@ class AdvancedIntentClassifier {
             };
         }
         
-        // Se não especificou valor, usar o valor da conta fixa (pagamento completo)
-        const billAmount = amount || bill.amount;
-        const isPartialPayment = amount && amount < bill.amount;
+        // 🧠 CÁLCULO INTELIGENTE: Determinar valor do pagamento
+        let billAmount, isPartialPayment;
+        
+        if (isRemainingPayment) {
+            // Para pagamento restante, precisamos calcular o valor restante
+            // Por enquanto, vamos usar o valor total da conta (será corrigido pelo backend)
+            billAmount = bill.amount;
+            isPartialPayment = false; // Pagamento restante é considerado completo
+        } else {
+            // Se não especificou valor, usar o valor da conta fixa (pagamento completo)
+            billAmount = amount || bill.amount;
+            isPartialPayment = amount && amount < bill.amount;
+        }
         
         if (!account) {
             // Verificar se há contas com saldo suficiente
@@ -2040,11 +2102,12 @@ class AdvancedIntentClassifier {
                 description: bill.description || bill.name,
                 billId: bill.id,
                 isPartialPayment: isPartialPayment,
+                isRemainingPayment: isRemainingPayment,
                 remainingAmount: isPartialPayment ? (bill.amount - amount) : 0
             }, 2);
             
             const accountOptions = accounts.map(acc => acc.name).join(', ');
-            const paymentType = isPartialPayment ? 'parcial' : 'completo';
+            const paymentType = isRemainingPayment ? 'restante' : (isPartialPayment ? 'parcial' : 'completo');
             const remainingInfo = isPartialPayment ? `\n💰 **Valor restante:** R$ ${(bill.amount - amount).toFixed(2)}` : '';
             
             return {
@@ -2931,6 +2994,7 @@ class PendingQuestionProcessor {
             context.resolvePendingQuestion();
             
             const isPartialPayment = data.isPartialPayment || false;
+            const isRemainingPayment = data.isRemainingPayment || false;
             const remainingAmount = data.remainingAmount || 0;
             
             return {
@@ -2941,7 +3005,8 @@ class PendingQuestionProcessor {
                         billId: data.billId,
                         paymentAmount: data.amount || 0,
                         accountId: billAccount.id || '',
-                        isFullPayment: !isPartialPayment,
+                        isFullPayment: !isPartialPayment && !isRemainingPayment,
+                        isRemainingPayment: isRemainingPayment,
                         remainingAmount: remainingAmount,
                         billDescription: data.description
                     }
