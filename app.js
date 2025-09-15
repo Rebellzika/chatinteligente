@@ -31,7 +31,9 @@ import {
     getFixedBillPaymentHistoryOptimized,
     getMultipleMonthsStatusOptimized,
     analyzeMonthlyComparison,
-    generateSavingsSuggestions
+    generateSavingsSuggestions,
+    saveCustomUserName,
+    loadCustomUserName
 } from './src/firestoreService.js';
 import { db, auth } from './firebase-config.js';
 import { 
@@ -251,6 +253,7 @@ let currentUser = null;
 let accounts = [];
 let transactions = [];
 let fixedBills = [];
+let customUserName = null; // Nome personalizado do usuário
 
 // Estado de paginação otimizada para milhões de transações
 let currentPage = 1;
@@ -285,6 +288,10 @@ const logoutBtn = document.getElementById('logout-btn');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 const chatMessages = document.getElementById('chat-messages');
+
+// Elementos do nome personalizado
+const customNameInput = document.getElementById('custom-name-input');
+const saveNameBtn = document.getElementById('save-name-btn');
 
 // Elementos da sidebar
 const totalBalance = document.getElementById('total-balance');
@@ -363,16 +370,84 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
+// Função para salvar nome personalizado
+async function saveCustomName() {
+    const name = customNameInput.value.trim();
+    
+    if (!name) {
+        alert('Por favor, digite um nome válido.');
+        return;
+    }
+    
+    try {
+        await saveCustomUserName(name);
+        customUserName = name;
+        
+        // Atualizar contexto do Gemini com o novo nome
+        updateGeminiContext({
+            userAccounts: accounts,
+            fixedBills: fixedBills,
+            recentTransactions: transactions.slice(0, 10),
+            currentUser: currentUser,
+            customUserName: customUserName
+        });
+        
+        // Mostrar confirmação
+        addChatMessage('system', `Nome personalizado salvo: ${name}`);
+        
+        // Atualizar placeholder do input
+        customNameInput.placeholder = name;
+        customNameInput.value = '';
+        
+    } catch (error) {
+        console.error('Erro ao salvar nome personalizado:', error);
+        alert('Erro ao salvar nome. Tente novamente.');
+    }
+}
+
+// Função para carregar nome personalizado
+async function loadCustomName() {
+    try {
+        const savedName = await loadCustomUserName();
+        if (savedName) {
+            customUserName = savedName;
+            customNameInput.placeholder = savedName;
+            
+            // Atualizar contexto do Gemini
+            updateGeminiContext({
+                userAccounts: accounts,
+                fixedBills: fixedBills,
+                recentTransactions: transactions.slice(0, 10),
+                currentUser: currentUser,
+                customUserName: customUserName
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar nome personalizado:', error);
+    }
+}
+
+// Função para obter nome do usuário (personalizado ou padrão)
+function getUserDisplayName() {
+    return customUserName || 'usuário';
+}
+
 // Configurar listeners de autenticação
 function initializeAuth() {
-    onAuthStateChangedListener((user) => {
+    onAuthStateChangedListener(async (user) => {
         if (user) {
             currentUser = user;
             showAppScreen();
             setupFirestoreListeners();
-            addChatMessage('system', 'Bem-vindo ao Dinah! Como posso ajudá-lo hoje?');
+            
+            // Carregar nome personalizado
+            await loadCustomName();
+            
+            const displayName = getUserDisplayName();
+            addChatMessage('system', `Bem-vindo ao Dinah! Como posso ajudá-lo hoje?`);
         } else {
             currentUser = null;
+            customUserName = null;
             showLoginScreen();
             cleanupFirestoreListeners();
         }
@@ -392,6 +467,15 @@ function setupEventListeners() {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
+        }
+    });
+
+    // Nome personalizado
+    saveNameBtn.addEventListener('click', saveCustomName);
+    customNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveCustomName();
         }
     });
 
@@ -761,6 +845,9 @@ async function processGeminiResult(result, originalMessage) {
             case 'QUERY_FIXED_BILLS':
                 await handleUnpaidBills(originalMessage);
                 break;
+            case 'QUERY_FINANCIAL_SUMMARY':
+                await handleFinancialSummary(originalMessage);
+                break;
             case 'ADD_DEBT':
                 await handleAddDebt(result.entities, originalMessage);
                 break;
@@ -803,6 +890,9 @@ async function handleDatabaseQuery(queryType, originalMessage) {
             case 'unpaid_bills':
                 await handleUnpaidBills(originalMessage);
                 break;
+            case 'financial_summary':
+                await handleFinancialSummary(originalMessage);
+                break;
             default:
                 addChatMessage('assistant', '📊 Consultando dados no banco...');
                 await handleQueryTransactions({}, originalMessage);
@@ -821,28 +911,214 @@ async function handleExpensesByDate(originalMessage) {
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
     
+    console.log('🔍 Buscando gastos de hoje:', today.toLocaleDateString('pt-BR'));
+    console.log('🔍 Total de transações:', transactions.length);
+    
     const todayExpenses = transactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        return t.type === 'expense' && 
-               transactionDate >= today && 
-               transactionDate <= endOfToday;
+        if (t.type !== 'expense') return false;
+        
+        let transactionDate;
+        try {
+            // Tratamento robusto de diferentes tipos de data
+            if (t.date && typeof t.date.toDate === 'function') {
+                transactionDate = t.date.toDate();
+            } else if (t.date && typeof t.date.seconds === 'number') {
+                transactionDate = new Date(t.date.seconds * 1000);
+            } else if (t.date instanceof Date) {
+                transactionDate = t.date;
+            } else if (typeof t.date === 'string' || typeof t.date === 'number') {
+                transactionDate = new Date(t.date);
+            } else {
+                console.warn('Data inválida encontrada:', t.date);
+                return false;
+            }
+            
+            // Verificar se a data é válida
+            if (isNaN(transactionDate.getTime())) {
+                console.warn('Data inválida após conversão:', t.date);
+                return false;
+            }
+            
+            const isToday = transactionDate >= today && transactionDate <= endOfToday;
+            
+            if (isToday) {
+                console.log('✅ Gasto de hoje encontrado:', t.description, t.amount, transactionDate.toLocaleDateString('pt-BR'));
+            }
+            
+            return isToday;
+        } catch (error) {
+            console.error('Erro ao processar data da transação:', error, t.date);
+            return false;
+        }
     });
     
+    console.log('🔍 Gastos de hoje encontrados:', todayExpenses.length);
+    
     if (todayExpenses.length === 0) {
-        addChatMessage('assistant', '📊 Você não teve gastos hoje.');
+        addChatMessage('assistant', `${getUserDisplayName()}, você não teve gastos hoje.`);
         return;
     }
     
     const totalExpenses = todayExpenses.reduce((sum, t) => sum + t.amount, 0);
     
-    let response = `📊 **Gastos de hoje (${today.toLocaleDateString('pt-BR')}):**\n\n`;
+    let response = `${getUserDisplayName()}, aqui estão seus gastos de hoje (${today.toLocaleDateString('pt-BR')}):\n\n`;
     response += `💰 **Total:** R$ ${totalExpenses.toFixed(2)}\n\n`;
     
     todayExpenses.forEach(t => {
-        response += `💸 **${t.description}** - R$ ${t.amount.toFixed(2)}\n`;
+        const time = t.date && typeof t.date.toDate === 'function' 
+            ? t.date.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+            : 'N/A';
+        response += `💸 **${t.description}** - R$ ${t.amount.toFixed(2)} (${time})\n`;
     });
     
     addChatMessage('assistant', response);
+}
+
+// Handler para resumo financeiro completo
+async function handleFinancialSummary(originalMessage) {
+    try {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        // Calcular totais gerais
+        const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+        
+        // Filtrar transações do mês atual
+        const monthlyTransactions = transactions.filter(t => {
+            if (!t.date) return false;
+            
+            let transactionDate;
+            try {
+                if (t.date && typeof t.date.toDate === 'function') {
+                    transactionDate = t.date.toDate();
+                } else if (t.date && typeof t.date.seconds === 'number') {
+                    transactionDate = new Date(t.date.seconds * 1000);
+                } else if (t.date instanceof Date) {
+                    transactionDate = t.date;
+                } else {
+                    transactionDate = new Date(t.date);
+                }
+                
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear;
+            } catch (error) {
+                return false;
+            }
+        });
+        
+        // Calcular gastos e receitas do mês
+        const monthlyExpenses = monthlyTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const monthlyIncome = monthlyTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.amount, 0);
+        
+        // Calcular gastos de hoje
+        const todayExpenses = transactions.filter(t => {
+            if (t.type !== 'expense') return false;
+            
+            let transactionDate;
+            try {
+                if (t.date && typeof t.date.toDate === 'function') {
+                    transactionDate = t.date.toDate();
+                } else if (t.date && typeof t.date.seconds === 'number') {
+                    transactionDate = new Date(t.date.seconds * 1000);
+                } else if (t.date instanceof Date) {
+                    transactionDate = t.date;
+                } else {
+                    transactionDate = new Date(t.date);
+                }
+                
+                const today = new Date();
+                return transactionDate.toDateString() === today.toDateString();
+            } catch (error) {
+                return false;
+            }
+        }).reduce((sum, t) => sum + t.amount, 0);
+        
+        // Contas fixas não pagas
+        const unpaidBills = fixedBills.filter(bill => {
+            const billPayments = transactions.filter(t => 
+                t.billId === bill.id && 
+                t.isBillPayment === true &&
+                new Date(t.date).getMonth() === currentMonth &&
+                new Date(t.date).getFullYear() === currentYear
+            );
+            return billPayments.length === 0;
+        });
+        
+        const totalUnpaidBills = unpaidBills.reduce((sum, bill) => sum + bill.amount, 0);
+        
+        // Análise por categoria
+        const categoryAnalysis = {};
+        monthlyTransactions.filter(t => t.type === 'expense').forEach(t => {
+            const category = t.category || 'outros';
+            if (!categoryAnalysis[category]) {
+                categoryAnalysis[category] = 0;
+            }
+            categoryAnalysis[category] += t.amount;
+        });
+        
+        // Top 3 categorias de gasto
+        const topCategories = Object.entries(categoryAnalysis)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3);
+        
+        // Construir resposta
+        let response = `${getUserDisplayName()}, aqui está seu resumo financeiro completo:\n\n`;
+        
+        // Saldo total
+        response += `💰 **SALDO TOTAL:** R$ ${totalBalance.toFixed(2)}\n\n`;
+        
+        // Resumo do mês
+        response += `📊 **RESUMO DO MÊS (${today.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })})**\n`;
+        response += `📈 **Receitas:** R$ ${monthlyIncome.toFixed(2)}\n`;
+        response += `📉 **Gastos:** R$ ${monthlyExpenses.toFixed(2)}\n`;
+        response += `💵 **Saldo do mês:** R$ ${(monthlyIncome - monthlyExpenses).toFixed(2)}\n\n`;
+        
+        // Gastos de hoje
+        response += `📅 **GASTOS DE HOJE:** R$ ${todayExpenses.toFixed(2)}\n\n`;
+        
+        // Contas fixas
+        if (unpaidBills.length > 0) {
+            response += `⚠️ **CONTAS FIXAS NÃO PAGAS:**\n`;
+            unpaidBills.forEach(bill => {
+                const dueDate = new Date(currentYear, currentMonth, bill.dueDay);
+                const isOverdue = today > dueDate;
+                const status = isOverdue ? '🔴 VENCIDA' : '🟡 Pendente';
+                response += `${status} **${bill.name}** - R$ ${bill.amount.toFixed(2)} (vence dia ${bill.dueDay})\n`;
+            });
+            response += `\n💰 **Total em aberto:** R$ ${totalUnpaidBills.toFixed(2)}\n\n`;
+        } else {
+            response += `✅ **Todas as contas fixas estão em dia!**\n\n`;
+        }
+        
+        // Top categorias
+        if (topCategories.length > 0) {
+            response += `🏆 **TOP CATEGORIAS DE GASTO:**\n`;
+            topCategories.forEach(([category, amount], index) => {
+                const percentage = monthlyExpenses > 0 ? ((amount / monthlyExpenses) * 100).toFixed(1) : 0;
+                response += `${index + 1}. **${category}** - R$ ${amount.toFixed(2)} (${percentage}%)\n`;
+            });
+            response += `\n`;
+        }
+        
+        // Saldo por conta
+        response += `🏦 **SALDO POR CONTA:**\n`;
+        accounts.forEach(account => {
+            const percentage = totalBalance > 0 ? ((account.balance / totalBalance) * 100).toFixed(1) : 0;
+            response += `• **${account.name}:** R$ ${account.balance.toFixed(2)} (${percentage}%)\n`;
+        });
+        
+        addChatMessage('assistant', response);
+        
+    } catch (error) {
+        console.error('Erro ao gerar resumo financeiro:', error);
+        addChatMessage('assistant', `${getUserDisplayName()}, ocorreu um erro ao gerar o resumo financeiro. Tente novamente.`);
+    }
 }
 
 // Handler para receitas por data
@@ -995,6 +1271,9 @@ async function handleAddExpense(entities, originalMessage) {
         return;
     }
     
+    // Calcular data baseada na referência (hoje, ontem, anteontem)
+    const transactionDate = calculateDateFromReference(entities.dateReference);
+    
     // Adicionar transação
     await addTransaction({
         type: 'expense',
@@ -1002,10 +1281,13 @@ async function handleAddExpense(entities, originalMessage) {
         description: description,
         accountId: account.id,
         category: category,
-        date: new Date()
+        date: transactionDate
     });
     
-    addChatMessage('assistant', `✅ Despesa de R$ ${entities.amount.toFixed(2)} registrada na conta ${account.name} - ${description}`);
+    const dateText = entities.dateReference === 'ontem' ? 'de ontem' : 
+                     entities.dateReference === 'anteontem' ? 'de anteontem' : '';
+    
+    addChatMessage('assistant', `${getUserDisplayName()}, despesa de R$ ${entities.amount.toFixed(2)} ${dateText} registrada na conta ${account.name} - ${description}`);
 }
 
 // Handler para adicionar receita
@@ -1037,6 +1319,9 @@ async function handleAddIncome(entities, originalMessage) {
         return;
     }
     
+    // Calcular data baseada na referência (hoje, ontem, anteontem)
+    const transactionDate = calculateDateFromReference(entities.dateReference);
+    
     // Adicionar transação
     await addTransaction({
         type: 'income',
@@ -1044,10 +1329,13 @@ async function handleAddIncome(entities, originalMessage) {
         description: description,
         accountId: account.id,
         category: category,
-        date: new Date()
+        date: transactionDate
     });
     
-    addChatMessage('assistant', `✅ Receita de R$ ${entities.amount.toFixed(2)} registrada na conta ${account.name} - ${description}`);
+    const dateText = entities.dateReference === 'ontem' ? 'de ontem' : 
+                     entities.dateReference === 'anteontem' ? 'de anteontem' : '';
+    
+    addChatMessage('assistant', `${getUserDisplayName()}, receita de R$ ${entities.amount.toFixed(2)} ${dateText} registrada na conta ${account.name} - ${description}`);
 }
 
 // Handler para transferência
@@ -1224,14 +1512,16 @@ async function handleSendMessage() {
             userAccounts: accounts,
             fixedBills: fixedBills,
             recentTransactions: transactions.slice(0, 10), // Últimas 10 transações
-            currentUser: currentUser
+            currentUser: currentUser,
+            customUserName: customUserName
         });
         
         // Processar mensagem com Gemini
         const result = await processMessageWithGemini(message, {
             userAccounts: accounts,
             fixedBills: fixedBills,
-            currentUser: currentUser
+            currentUser: currentUser,
+            customUserName: customUserName
         });
         
         // Validação do resultado
@@ -3452,9 +3742,38 @@ function formatDate(date) {
     if (!date) return 'Data não disponível';
     
     try {
-        const dateObj = date.toDate ? date.toDate() : new Date(date);
+        let dateObj;
+        
+        // Se é um timestamp do Firestore
+        if (date && typeof date.toDate === 'function') {
+            dateObj = date.toDate();
+        }
+        // Se é uma string ou timestamp
+        else if (typeof date === 'string' || typeof date === 'number') {
+            dateObj = new Date(date);
+        }
+        // Se já é um objeto Date
+        else if (date instanceof Date) {
+            dateObj = date;
+        }
+        // Se tem propriedades seconds/nanoseconds (Timestamp)
+        else if (date && typeof date.seconds === 'number') {
+            dateObj = new Date(date.seconds * 1000);
+        }
+        else {
+            console.warn('Tipo de data não reconhecido:', date);
+            return 'Data inválida';
+        }
+        
+        // Verificar se a data é válida
+        if (isNaN(dateObj.getTime())) {
+            console.warn('Data inválida detectada:', date);
+            return 'Data inválida';
+        }
+        
         return dateObj.toLocaleDateString('pt-BR');
     } catch (error) {
+        console.error('Erro ao formatar data:', error, date);
         return 'Data inválida';
     }
 }
@@ -3537,6 +3856,123 @@ function getStatusText(status) {
     return texts[status] || 'Desconhecido';
 }
 
+// Função para calcular data baseada na referência (hoje, ontem, anteontem)
+function calculateDateFromReference(dateReference) {
+    const today = new Date();
+    
+    switch (dateReference) {
+        case 'ontem':
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            return yesterday;
+        case 'anteontem':
+            const dayBeforeYesterday = new Date(today);
+            dayBeforeYesterday.setDate(today.getDate() - 2);
+            return dayBeforeYesterday;
+        case 'hoje':
+        default:
+            return today;
+    }
+}
+
+// Função para processar ações de botões
+async function handleButtonAction(action, accountName) {
+    try {
+        console.log('🔄 Processando ação do botão:', action, accountName);
+        
+        // Verificar se é uma ação de débito
+        if (action.startsWith('debitar_')) {
+            const accountNameFromAction = action.replace('debitar_', '');
+            const account = accounts.find(acc => acc.name === accountNameFromAction);
+            
+            if (!account) {
+                addChatMessage('assistant', `${getUserDisplayName()}, não encontrei a conta "${accountNameFromAction}". Por favor, tente novamente.`);
+                return;
+            }
+            
+            // Buscar o valor e descrição da despesa pendente
+            const lastAssistantMessage = [...chatMessages.children]
+                .reverse()
+                .find(msg => msg.classList.contains('assistant'))
+                ?.textContent;
+            
+            if (lastAssistantMessage) {
+                const valueMatch = lastAssistantMessage.match(/R\$\s*([\d,]+\.?\d*)/);
+                const descMatch = lastAssistantMessage.match(/- ([^.]+)/);
+                
+                if (valueMatch) {
+                    const amount = parseFloat(valueMatch[1].replace(',', '.'));
+                    const description = descMatch ? descMatch[1].trim() : 'Gasto';
+                    
+                    // Verificar saldo
+                    if (account.balance < amount) {
+                        addChatMessage('assistant', `${getUserDisplayName()}, saldo insuficiente na conta ${account.name}. Saldo atual: R$ ${account.balance.toFixed(2)}`);
+                        return;
+                    }
+                    
+                    // Processar despesa
+                    await addTransaction({
+                        type: 'expense',
+                        amount: amount,
+                        description: description,
+                        accountId: account.id,
+                        category: 'outros',
+                        date: new Date()
+                    });
+                    
+                    addChatMessage('assistant', `${getUserDisplayName()}, despesa de R$ ${amount.toFixed(2)} registrada na conta ${account.name} - ${description}`);
+                }
+            }
+        }
+        // Verificar se é uma ação de crédito
+        else if (action.startsWith('creditar_')) {
+            const accountNameFromAction = action.replace('creditar_', '');
+            const account = accounts.find(acc => acc.name === accountNameFromAction);
+            
+            if (!account) {
+                addChatMessage('assistant', `${getUserDisplayName()}, não encontrei a conta "${accountNameFromAction}". Por favor, tente novamente.`);
+                return;
+            }
+            
+            // Buscar o valor e descrição da receita pendente
+            const lastAssistantMessage = [...chatMessages.children]
+                .reverse()
+                .find(msg => msg.classList.contains('assistant'))
+                ?.textContent;
+            
+            if (lastAssistantMessage) {
+                const valueMatch = lastAssistantMessage.match(/R\$\s*([\d,]+\.?\d*)/);
+                const descMatch = lastAssistantMessage.match(/- ([^.]+)/);
+                
+                if (valueMatch) {
+                    const amount = parseFloat(valueMatch[1].replace(',', '.'));
+                    const description = descMatch ? descMatch[1].trim() : 'Receita';
+                    
+                    // Processar receita
+                    await addTransaction({
+                        type: 'income',
+                        amount: amount,
+                        description: description,
+                        accountId: account.id,
+                        category: 'outros',
+                        date: new Date()
+                    });
+                    
+                    addChatMessage('assistant', `${getUserDisplayName()}, receita de R$ ${amount.toFixed(2)} registrada na conta ${account.name} - ${description}`);
+                }
+            }
+        }
+        else {
+            // Para outras ações, processar como mensagem normal
+            chatInput.value = accountName;
+            handleSendMessage();
+        }
+    } catch (error) {
+        console.error('Erro ao processar ação do botão:', error);
+        addChatMessage('assistant', `${getUserDisplayName()}, ocorreu um erro ao processar sua solicitação. Tente novamente.`);
+    }
+}
+
 function addChatMessage(sender, message, buttons = null) {
     const messageElement = document.createElement('div');
     messageElement.className = `chat-message ${sender}`;
@@ -3611,11 +4047,19 @@ function addChatMessage(sender, message, buttons = null) {
                         btn.style.transform = 'scale(0.95)';
                     });
                     
-                    // Enviar o valor do botão como mensagem após um pequeno delay
-                    setTimeout(() => {
-                        chatInput.value = button.value;
-                        handleSendMessage();
-                    }, 200);
+                    // Processar ação específica ou enviar como mensagem
+                    if (button.action) {
+                        // Processar ação específica
+                        setTimeout(() => {
+                            handleButtonAction(button.action, button.text);
+                        }, 200);
+                    } else {
+                        // Enviar o valor do botão como mensagem após um pequeno delay
+                        setTimeout(() => {
+                            chatInput.value = button.value || button.text;
+                            handleSendMessage();
+                        }, 200);
+                    }
                 }
             });
             
