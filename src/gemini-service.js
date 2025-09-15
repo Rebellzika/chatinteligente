@@ -50,7 +50,7 @@ class GeminiService {
         ).join('\n');
 
         const fixedBillsInfo = this.context.fixedBills.map(bill => 
-            `- ${bill.name}: R$ ${bill.amount.toFixed(2)} (vencimento dia ${bill.dueDay})`
+            `- ${bill.description || bill.name || 'Conta sem nome'}: R$ ${bill.amount.toFixed(2)} (vencimento dia ${bill.dueDay})`
         ).join('\n');
 
         // Buscar transações recentes para contexto
