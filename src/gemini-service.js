@@ -59,9 +59,14 @@ class GeminiService {
             `- ${t.type === 'expense' ? 'Despesa' : t.type === 'income' ? 'Receita' : 'Transferência'}: R$ ${t.amount.toFixed(2)} - ${t.description} (${new Date(t.date).toLocaleDateString('pt-BR')})`
         ).join('\n');
 
+        // Obter nome personalizado do usuário
+        const userName = this.context.customUserName || 'usuário';
+
         return `Você é o Dinah, um assistente financeiro inteligente que funciona DENTRO de um aplicativo de controle financeiro pessoal.
 
 ⚠️ CONTEXTO CRÍTICO: Você está funcionando dentro de um programa/aplicativo financeiro. TODAS as interações do usuário são referentes a este programa específico. NUNCA confunda com bancos reais ou sistemas externos.
+
+🎯 PERSONALIZAÇÃO: O usuário gosta de ser chamado de "${userName}". Sempre que possível, use "${userName}" nas suas respostas, especialmente ao confirmar transações.
 
 📊 DADOS REAIS DO USUÁRIO (NÃO INVENTE NADA):
 Contas disponíveis no programa:
@@ -95,7 +100,8 @@ RESPONDA APENAS COM JSON no seguinte formato:
     "confidence": 0.0_a_1.0,
     "response": "resposta_amigável_e_clara_para_o_usuário",
     "needsDatabaseQuery": true_ou_false,
-    "queryType": "tipo_de_consulta_ou_null"
+    "queryType": "tipo_de_consulta_ou_null",
+    "dateReference": "hoje|ontem|anteontem|null"
 }
 
 EXEMPLOS ESPECÍFICOS:
@@ -125,9 +131,26 @@ Usuário: "Gastei 50 reais no mercado"
     "fixedBillName": null,
     "category": "alimentação",
     "confidence": 0.95,
-    "response": "Registrei sua despesa de R$ 50,00 no mercado. De qual conta você quer debitar?",
+    "response": "${userName}, registrei sua despesa de R$ 50,00 no mercado. De qual conta você quer debitar?",
     "needsDatabaseQuery": false,
-    "queryType": null
+    "queryType": null,
+    "dateReference": "hoje"
+}
+
+Usuário: "gastei 30 reais ontem na farmácia"
+{
+    "intent": "ADD_EXPENSE",
+    "amount": 30,
+    "description": "farmácia",
+    "fromAccount": null,
+    "toAccount": null,
+    "fixedBillName": null,
+    "category": "saude",
+    "confidence": 0.95,
+    "response": "${userName}, registrei sua despesa de R$ 30,00 de ontem na farmácia. De qual conta você quer debitar?",
+    "needsDatabaseQuery": false,
+    "queryType": null,
+    "dateReference": "ontem"
 }
 
 Usuário: "Quanto gastei ontem?"
@@ -173,6 +196,21 @@ Usuário: "tenho alguma conta fixa que não paguei?"
     "response": "Vou consultar suas contas fixas no banco de dados...",
     "needsDatabaseQuery": true,
     "queryType": "unpaid_bills"
+}
+
+Usuário: "me dê um resumo financeiro completo"
+{
+    "intent": "QUERY_FINANCIAL_SUMMARY",
+    "amount": null,
+    "description": null,
+    "fromAccount": null,
+    "toAccount": null,
+    "fixedBillName": null,
+    "category": null,
+    "confidence": 0.98,
+    "response": "Pri, vou preparar um resumo financeiro completo para você...",
+    "needsDatabaseQuery": true,
+    "queryType": "financial_summary"
 }
 
 Responda APENAS com o JSON, sem texto adicional.`;
@@ -241,22 +279,23 @@ Responda APENAS com o JSON, sem texto adicional.`;
             const parsedResponse = JSON.parse(jsonMatch[0]);
             
             // Converte para formato esperado pelo sistema
-            return {
-                intent: parsedResponse.intent,
-                entities: {
-                    amount: parsedResponse.amount,
-                    description: parsedResponse.description,
-                    fromAccount: parsedResponse.fromAccount,
-                    toAccount: parsedResponse.toAccount,
-                    fixedBillName: parsedResponse.fixedBillName,
-                    category: parsedResponse.category
-                },
-                confidence: parsedResponse.confidence || 0.8,
-                response: parsedResponse.response,
-                needsDatabaseQuery: parsedResponse.needsDatabaseQuery || false,
-                queryType: parsedResponse.queryType || null,
-                rawResponse: geminiResponse
-            };
+        return {
+            intent: parsedResponse.intent,
+            entities: {
+                amount: parsedResponse.amount,
+                description: parsedResponse.description,
+                fromAccount: parsedResponse.fromAccount,
+                toAccount: parsedResponse.toAccount,
+                fixedBillName: parsedResponse.fixedBillName,
+                category: parsedResponse.category,
+                dateReference: parsedResponse.dateReference
+            },
+            confidence: parsedResponse.confidence || 0.8,
+            response: parsedResponse.response,
+            needsDatabaseQuery: parsedResponse.needsDatabaseQuery || false,
+            queryType: parsedResponse.queryType || null,
+            rawResponse: geminiResponse
+        };
         } catch (error) {
             console.error('Erro ao processar resposta do Gemini:', error);
             return this.getFallbackResponse(originalMessage);
