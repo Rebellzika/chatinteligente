@@ -2713,6 +2713,45 @@ function generateComparisonSummary(comparison) {
     return summary;
 }
 
+// Função para salvar nome personalizado do usuário
+export async function saveCustomUserName(customName) {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+    
+    if (!customName || customName.trim() === '') {
+        throw new Error('Nome não pode estar vazio');
+    }
+    
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, {
+        customName: customName.trim(),
+        updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    return { success: true };
+}
+
+// Função para carregar nome personalizado do usuário
+export async function loadCustomUserName() {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+    
+    try {
+        const userRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            return userData.customName || null;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Erro ao carregar nome personalizado:', error);
+        return null;
+    }
+}
+
 // Sistema de sugestões de economia
 export async function generateSavingsSuggestions(userId) {
     const user = auth.currentUser;
