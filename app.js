@@ -1089,7 +1089,7 @@ async function handleFinancialSummary(originalMessage) {
                 const dueDate = new Date(currentYear, currentMonth, bill.dueDay);
                 const isOverdue = today > dueDate;
                 const status = isOverdue ? '🔴 VENCIDA' : '🟡 Pendente';
-                response += `${status} **${bill.name}** - R$ ${bill.amount.toFixed(2)} (vence dia ${bill.dueDay})\n`;
+                response += `${status} **${bill.description || bill.name || 'Conta sem nome'}** - R$ ${bill.amount.toFixed(2)} (vence dia ${bill.dueDay})\n`;
             });
             response += `\n💰 **Total em aberto:** R$ ${totalUnpaidBills.toFixed(2)}\n\n`;
         } else {
@@ -1229,7 +1229,7 @@ async function handleUnpaidBills(originalMessage) {
         const isOverdue = today > dueDate;
         const status = isOverdue ? '🔴 VENCIDA' : '🟡 Pendente';
         
-        response += `${status} **${bill.name}**\n`;
+        response += `${status} **${bill.description || bill.name || 'Conta sem nome'}**\n`;
         response += `   💰 R$ ${bill.amount.toFixed(2)} - Vence dia ${bill.dueDay}\n\n`;
     });
     
@@ -1396,18 +1396,19 @@ async function handlePayFixedBill(entities, originalMessage) {
     }
     
     // Encontrar conta fixa
-    const fixedBill = fixedBills.find(bill => 
-        bill.name.toLowerCase().includes(entities.fixedBillName.toLowerCase()) ||
-        entities.fixedBillName.toLowerCase().includes(bill.name.toLowerCase())
-    );
+    const fixedBill = fixedBills.find(bill => {
+        const billName = bill.description || bill.name || '';
+        return billName.toLowerCase().includes(entities.fixedBillName.toLowerCase()) ||
+               entities.fixedBillName.toLowerCase().includes(billName.toLowerCase());
+    });
     
     if (!fixedBill) {
-        addChatMessage('assistant', `❌ Conta fixa "${entities.fixedBillName}" não encontrada. Contas fixas disponíveis: ${fixedBills.map(b => b.name).join(', ')}`);
+        addChatMessage('assistant', `❌ Conta fixa "${entities.fixedBillName}" não encontrada. Contas fixas disponíveis: ${fixedBills.map(b => b.description || b.name || 'Conta sem nome').join(', ')}`);
         return;
     }
     
     // Perguntar de qual conta pagou
-    addChatMessage('assistant', `Ótimo! Registrei o pagamento da conta fixa "${fixedBill.name}". De qual conta você pagou?`, [
+    addChatMessage('assistant', `Ótimo! Registrei o pagamento da conta fixa "${fixedBill.description || fixedBill.name || 'Conta sem nome'}". De qual conta você pagou?`, [
         ...accounts.map(acc => ({ text: acc.name, action: `pagar_conta_fixa_${fixedBill.id}_${acc.id}` }))
     ]);
 }
